@@ -58,7 +58,7 @@ function setupCameraControls(camera, scene) {
     // Zoom with mouse wheel
     document.addEventListener('wheel', function(event) {
         controls.cameraDistance += event.deltaY * 0.01;
-        controls.cameraDistance = Math.max(5, controls.cameraDistance);
+        controls.cameraDistance = Math.max(1, controls.cameraDistance);
     });
 
     // Update camera function to be called in render loop
