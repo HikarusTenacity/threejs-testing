@@ -1,9 +1,3 @@
-// Piece factory helpers. Individual piece constructors are loaded from:
-// js/game/pieces/gun.js
-// js/game/pieces/bandage.js
-// js/game/pieces/tree.js
-// js/game/pieces/briefcase.js
-
 function normalizePieceToSharedSize(piece, targetSize) {
     piece.updateMatrixWorld(true);
 
@@ -46,27 +40,38 @@ function createGamePieces() {
     var boardY = -1.0;
     var clearance = 0.02;
 
-    var gun = createSixShooter();
-    normalizePieceToSharedSize(gun, sharedHitboxSize);
-    gun.rotation.y = 0.35;
-    placePieceOnBoard(gun, -4, -2, boardY, clearance);
-    pieces.push(gun);
+    var redGuy = createGuy("red");
+    normalizePieceToSharedSize(redGuy, sharedHitboxSize);
+    placePieceOnBoard(redGuy, -4, -2, boardY, clearance);
+    pieces.push(redGuy);
 
-    var healthPack = createHealthPack();
-    normalizePieceToSharedSize(healthPack, sharedHitboxSize);
-    placePieceOnBoard(healthPack, -1.2, -2.2, boardY, clearance);
-    pieces.push(healthPack);
+    var greenGuy = createGuy("green");
+    normalizePieceToSharedSize(greenGuy, sharedHitboxSize);
+    placePieceOnBoard(greenGuy, -1.2, -2.2, boardY, clearance);
+    pieces.push(greenGuy);
 
-    var tree = createTree();
-    normalizePieceToSharedSize(tree, sharedHitboxSize);
-    placePieceOnBoard(tree, 2.6, -1.4, boardY, 0.0);
-    pieces.push(tree);
+    var blueGuy = createGuy("blue");
+    normalizePieceToSharedSize(blueGuy, sharedHitboxSize);
+    placePieceOnBoard(blueGuy, 2.6, -1.4, boardY, clearance);
+    pieces.push(blueGuy);
 
-    var briefcase = createBriefcase();
-    normalizePieceToSharedSize(briefcase, sharedHitboxSize);
-    briefcase.rotation.y = -0.45;
-    placePieceOnBoard(briefcase, 4.5, -2.5, boardY, clearance);
-    pieces.push(briefcase);
+    var yellowGuy = createGuy("yellow");
+    normalizePieceToSharedSize(yellowGuy, sharedHitboxSize);
+    placePieceOnBoard(yellowGuy, 4.5, -2.5, boardY, clearance);
+    pieces.push(yellowGuy);
 
     return pieces;
+}
+
+function positionPiecesForCharacterSelect(pieces) {
+    var spacing = 2.2;
+    var startX = -((pieces.length - 1) * spacing) / 2;
+    var centerZ = 1.2;
+
+    for (var i = 0; i < pieces.length; i++) {
+        var piece = pieces[i];
+        piece.position.x = startX + i * spacing;
+        piece.position.z = centerZ;
+        piece.rotation.y = Math.PI;
+    }
 }

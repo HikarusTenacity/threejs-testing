@@ -1,4 +1,6 @@
 // Sky elements - sun, clouds, fog, background
+var cloudsToUpdate = [];
+
 function setupSky(scene, directionalLight) {
     var sunColor = 0xffff00;
     var skyColor = 0x87ceeb;
@@ -22,12 +24,20 @@ function setupSky(scene, directionalLight) {
     scene.add(halo);
     
     //generate clouds
+    cloudsToUpdate = [];
     for (var i = 0; i < 80; i++) {
         var cloud = generateCloud();
         scene.add(cloud);
+        cloudsToUpdate.push(cloud);
     }
 
-    //give sky gradient
+    //give sky gradient with atmospheric fog
     scene.background = new THREE.Color(skyColor);
-    scene.fog = new THREE.Fog(skyColor, 80, 200);
+    scene.fog = new THREE.Fog(skyColor, 30, 100);
+}
+
+function updateClouds() {
+    for (var i = 0; i < cloudsToUpdate.length; i++) {
+        updateCloudPosition(cloudsToUpdate[i]);
+    }
 }
