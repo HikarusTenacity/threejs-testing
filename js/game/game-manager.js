@@ -22,9 +22,10 @@ function createGameManager(scene, camera, worldPieces, rendererDomElement) {
         pregameExitAnimations: [],
         pregameNameEntry: null,
         pregameNameMessage: '',
-        pregameNameCharacters: ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-        pregameNameKeyboardRows: ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ0123', '456789 _'],
+        pregameNameCharacters: ' ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.!?#',
+        pregameNameKeyboardRows: ['ABCDEFGHIJ', 'KLMNOPQRST', 'UVWXYZ.!?#','1234567890'],
         pregameNameLength: 8,
+        animationSpeed: 1,
         rendererDomElement: rendererDomElement,
         
         // Input handler for controllers/keyboard
@@ -35,6 +36,7 @@ function createGameManager(scene, camera, worldPieces, rendererDomElement) {
             var self = this;
             this.diceAnimator = createDiceAnimator(this.scene, this.camera);
             this.diceAnimator.gameManager = self;
+            this.diceAnimator.setSpeedMultiplier(this.animationSpeed);
 
             this.initializeCharacterSelect();
             this.setupPregamePointerHandlers();
@@ -76,7 +78,7 @@ function createGameManager(scene, camera, worldPieces, rendererDomElement) {
             switch(this.gameState) {
                 case 'PRE_GAME_SELECT':
                     if (this.isNameEntryActive()) {
-                        this.inputHandler.setButtonText('Confirm Name');
+                        this.inputHandler.setButtonText('Confirm');
                         this.inputHandler.setButtonColor('blue');
                     } else {
                         this.inputHandler.setButtonText('Select Character');
@@ -591,6 +593,30 @@ function createGameManager(scene, camera, worldPieces, rendererDomElement) {
             return true;
         },
 
+        deleteNameEntryCharacter: function() {
+            if (!this.isNameEntryActive()) {
+                return false;
+            }
+
+            var entry = this.pregameNameEntry;
+            var cursor = entry.cursor;
+
+            // Backspace behavior: clear current slot, or previous slot if current is already empty.
+            if (entry.slots[cursor] !== ' ') {
+                entry.slots[cursor] = ' ';
+                return true;
+            }
+
+            var previous = cursor - 1;
+            if (previous < 0) {
+                previous = this.pregameNameLength - 1;
+            }
+
+            entry.cursor = previous;
+            entry.slots[previous] = ' ';
+            return true;
+        },
+
         confirmNameEntry: function() {
             if (!this.isNameEntryActive()) {
                 return false;
@@ -661,7 +687,8 @@ function createGameManager(scene, camera, worldPieces, rendererDomElement) {
             var now = Date.now();
             for (var i = this.pregameExitAnimations.length - 1; i >= 0; i--) {
                 var anim = this.pregameExitAnimations[i];
-                var progress = Math.min((now - anim.startTime) / anim.duration, 1);
+                var speed = Math.max(0.25, this.animationSpeed || 1);
+                var progress = Math.min(((now - anim.startTime) * speed) / anim.duration, 1);
                 var eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
                 anim.piece.position.x = anim.startX + (anim.endX - anim.startX) * eased;
@@ -776,6 +803,14 @@ function createGameManager(scene, camera, worldPieces, rendererDomElement) {
         
         getCurrentPlayer: function() {
             return PLAYERS[this.currentPlayerIndex];
+        },
+
+        setGameSpeed: function(multiplier) {
+            this.animationSpeed = Math.max(0.5, Math.min(2.0, multiplier || 1));
+
+            if (this.diceAnimator && this.diceAnimator.setSpeedMultiplier) {
+                this.diceAnimator.setSpeedMultiplier(this.animationSpeed);
+            }
         }
     };
     

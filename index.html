@@ -1,9 +1,190 @@
-<html>
+<html lang="en" translate="no" class="notranslate">
 <head>
-<title>My first Three.js app</title>
+<meta charset="utf-8">
+<meta http-equiv="Content-Language" content="en">
+<meta name="google" content="notranslate">
+<title>Politico!</title>
+<script>
+// Set this URL (or localStorage key "kurokaneFontUrl") to dynamically load Kurokane.
+window.__KUROKANE_FONT_URL__ = window.__KUROKANE_FONT_URL__ || 'assets/fonts/Kurokane.woff2';
+
+(function loadKurokaneDynamically() {
+    var fontUrl = window.__KUROKANE_FONT_URL__ || localStorage.getItem('kurokaneFontUrl') || '';
+    if (!fontUrl || !window.FontFace || !document.fonts) {
+        return;
+    }
+
+    var kurokaneFace = new FontFace('Kurokane', 'url(' + fontUrl + ')');
+    kurokaneFace.load().then(function(loadedFace) {
+        document.fonts.add(loadedFace);
+        document.documentElement.classList.add('kurokane-loaded');
+    }).catch(function(error) {
+        console.warn('Failed to load Kurokane font:', error);
+    });
+})();
+</script>
 <style>
+@font-face {
+font-family: 'Kurokane';
+src: local('Kurokane');
+font-display: swap;
+}
+
+:root {
+--arcade-font: 'Kurokane';
+/* Lofi text tuning: edit these values only */
+--lofi-text-downscale-static: 0.66;
+--lofi-text-upscale-static: 1.52;
+--lofi-text-blur-static: 0.85px;
+--lofi-text-blur-controls: 0.68px;
+}
+
+#info,
+#turnDisplay,
+.player-corner,
+.arcade-name-overlay,
+.title-screen-overlay,
+.title-rules-modal,
+.credits-overlay,
+.credits-panel,
+.settings-overlay,
+.settings-panel {
+font-smooth: never;
+-webkit-font-smoothing: none;
+-moz-osx-font-smoothing: grayscale;
+text-rendering: optimizeSpeed;
+}
+
+/* Downscale then upscale static text blocks to mimic low-resolution rasterized text. */
+.arcade-name-title,
+.arcade-name-message,
+.arcade-name-controls,
+.title-screen-logo,
+.title-screen-subtitle,
+.title-screen-controls,
+.title-rules-title,
+.title-rules-text,
+.credits-title,
+.credits-line,
+.credits-line-strong,
+.settings-title,
+.settings-label,
+.settings-value-label,
+.toggle-label {
+zoom: var(--lofi-text-downscale-static);
+transform: scale(var(--lofi-text-upscale-static));
+transform-origin: center;
+filter: blur(var(--lofi-text-blur-static));
+}
+
+/* Keep transform-heavy controls functional while softening text fidelity. */
+.arcade-name-slot,
+.arcade-name-key,
+.arcade-name-key-delete,
+.arcade-name-confirm,
+.title-screen-start,
+.title-rules-close,
+.credits-close-btn,
+.settings-option-btn,
+.settings-button,
+#info,
+#turnDisplay,
+.player-corner {
+filter: blur(var(--lofi-text-blur-controls));
+}
+
 html, body { width: 100%; height: 100%; margin: 0; padding: 0; }
 canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.retro-canvas {
+image-rendering: pixelated;
+transform-origin: center;
+}
+
+.retro-screen-overlay {
+position: fixed;
+inset: 0;
+pointer-events: none;
+z-index: 110;
+mix-blend-mode: multiply;
+overflow: hidden;
+background:
+repeating-linear-gradient(
+to bottom,
+rgba(0, 0, 0, 0.21) 0px,
+rgba(0, 0, 0, 0.21) 2px,
+rgba(255, 255, 255, 0.02) 3px,
+rgba(255, 255, 255, 0.02) 4px
+),
+radial-gradient(circle at center, transparent 48%, rgba(0, 0, 0, 0.58) 100%);
+opacity: 0.58;
+}
+
+.retro-screen-overlay::before,
+.retro-screen-overlay::after {
+content: '';
+position: absolute;
+left: 0;
+right: 0;
+pointer-events: none;
+}
+
+/* Slow rolling scan-wave texture like CRT interference bands. */
+.retro-screen-overlay::before {
+top: -35%;
+bottom: -35%;
+opacity: 0.24;
+background: repeating-linear-gradient(
+to bottom,
+rgba(255, 255, 255, 0.08) 0px,
+rgba(255, 255, 255, 0.08) 2px,
+rgba(0, 0, 0, 0) 8px,
+rgba(0, 0, 0, 0) 18px,
+rgba(0, 0, 0, 0.09) 22px,
+rgba(0, 0, 0, 0.09) 24px
+);
+filter: blur(0.7px);
+mix-blend-mode: screen;
+animation: crtWaveRoll 10.5s linear infinite;
+}
+
+/* Horizontal brightness wave sweeping down the screen. */
+.retro-screen-overlay::after {
+top: -120%;
+height: 140%;
+opacity: 0.2;
+background: linear-gradient(
+to bottom,
+transparent 0%,
+rgba(255, 255, 255, 0.14) 46%,
+rgba(255, 255, 255, 0.04) 56%,
+transparent 72%
+);
+animation: crtBandSweep 8.6s ease-in-out infinite;
+}
+
+@keyframes crtWaveRoll {
+0% {
+transform: translateY(-18%) skewX(0deg);
+}
+50% {
+transform: translateY(8%) skewX(0.55deg);
+}
+100% {
+transform: translateY(36%) skewX(-0.4deg);
+}
+}
+
+@keyframes crtBandSweep {
+0% {
+transform: translateY(-95%);
+}
+50% {
+transform: translateY(25%);
+}
+100% {
+transform: translateY(130%);
+}
+}
 #info {
 position: absolute;
 top: 50%;
@@ -153,20 +334,22 @@ height: 85vh;
 max-width: 1400px;
 max-height: 900px;
 padding: 40px 50px;
-background: 
-    radial-gradient(ellipse at 30% 20%, rgba(139, 90, 43, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(101, 67, 33, 0.3) 0%, transparent 50%),
-    linear-gradient(135deg, #8B5A2B 0%, #A0522D 25%, #8B4513 50%, #654321 75%, #5C4033 100%);
+background: #7B4A20;
 border: 8px solid #4A2511;
-border-radius: 30px;
+border-radius: 0;
 box-shadow: 
-    inset 0 2px 4px rgba(255, 255, 255, 0.2),
-    inset 0 -3px 8px rgba(0, 0, 0, 0.4),
-    0 0 0 3px #3D1F0F,
-    0 0 0 6px #8B5A2B,
-    0 20px 60px rgba(0, 0, 0, 0.8);
+    inset 4px 4px 0 rgba(255, 255, 255, 0.1),
+    inset -4px -4px 0 rgba(0, 0, 0, 0.35),
+    10px 10px 0 #5A3316,
+    20px 20px 0 rgba(0, 0, 0, 0.4);
 color: #FFF8DC;
-font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+font-family: var(--arcade-font);
+font-weight: 900;
+letter-spacing: 1px;
+text-transform: uppercase;
+font-smooth: never;
+-webkit-font-smoothing: none;
+-moz-osx-font-smoothing: grayscale;
 z-index: 25;
 pointer-events: auto;
 display: flex;
@@ -180,15 +363,21 @@ display: none;
 }
 
 .arcade-name-title {
-font-size: 48px;
+font-size: 40px;
 font-weight: bold;
-letter-spacing: 3px;
+letter-spacing: 0;
 margin-bottom: 20px;
 text-align: center;
 color: #FFE4B5;
+font-family: var(--arcade-font);
+font-weight: 900;
+text-transform: uppercase;
+font-smooth: never;
+-webkit-font-smoothing: none;
+-moz-osx-font-smoothing: grayscale;
 text-shadow: 
-    3px 3px 0px #654321,
-    5px 5px 10px rgba(0, 0, 0, 0.6);
+    2px 2px 0 #000,
+    4px 4px 0 #4A2511;
 }
 
 .arcade-name-slots {
@@ -203,45 +392,43 @@ width: 70px;
 height: 80px;
 line-height: 80px;
 text-align: center;
-font-size: 52px;
+font-size: 44px;
 font-weight: bold;
+font-family: var(--arcade-font);
+font-weight: 900;
+letter-spacing: 0;
+font-smooth: never;
+-webkit-font-smoothing: none;
+-moz-osx-font-smoothing: grayscale;
 border: 5px solid #654321;
-border-radius: 15px;
-background: 
-    radial-gradient(ellipse at 50% 30%, rgba(255, 248, 220, 0.3) 0%, transparent 60%),
-    linear-gradient(135deg, #D2691E 0%, #A0522D 100%);
+border-radius: 8px;
+background: #C46B1F;
 color: #FFF8DC;
 pointer-events: auto;
 cursor: pointer;
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 4px 0 #4A2511,
-    0 8px 15px rgba(0, 0, 0, 0.4);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    4px 4px 0 #4A2511;
 transition: transform 0.1s ease;
 }
 
 .arcade-name-slot:hover {
 transform: translateY(-3px);
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 7px 0 #4A2511,
-    0 12px 20px rgba(0, 0, 0, 0.5);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    6px 6px 0 #4A2511;
 }
 
 .arcade-name-slot.active {
 border-color: #FFD700;
-background: 
-    radial-gradient(ellipse at 50% 30%, rgba(255, 248, 220, 0.5) 0%, transparent 60%),
-    linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+background: #D4A017;
 color: #FFFAF0;
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.4),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.3),
-    0 4px 0 #B8860B,
-    0 8px 15px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(255, 215, 0, 0.6);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.18),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.22),
+    4px 4px 0 #B8860B;
 }
 
 .arcade-name-keyboard-row {
@@ -249,11 +436,28 @@ display: flex;
 justify-content: center;
 gap: 12px;
 margin-bottom: 12px;
+width: 100%;
 }
 
 .arcade-name-keyboard {
 pointer-events: auto;
 margin-bottom: 20px;
+display: flex;
+flex-direction: row;
+align-items: center;
+width: max-content;
+max-width: 100%;
+gap: 18px;
+justify-content: center;
+margin-left: auto;
+margin-right: auto;
+align-self: center;
+}
+
+.arcade-name-keyboard-grid {
+display: flex;
+flex-direction: column;
+align-items: center;
 }
 
 .arcade-name-key {
@@ -261,48 +465,84 @@ width: 72px;
 height: 70px;
 line-height: 70px;
 text-align: center;
-font-size: 36px;
+font-size: 30px;
 font-weight: bold;
+font-family: var(--arcade-font);
+font-weight: 900;
+font-smooth: never;
+-webkit-font-smoothing: none;
+-moz-osx-font-smoothing: grayscale;
 border: 5px solid #654321;
-border-radius: 18px;
-background: 
-    radial-gradient(ellipse at 50% 30%, rgba(255, 248, 220, 0.3) 0%, transparent 60%),
-    linear-gradient(135deg, #CD853F 0%, #8B4513 100%);
+border-radius: 8px;
+background: #A86B2A;
 color: #FFF8DC;
 cursor: pointer;
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 5px 0 #4A2511,
-    0 10px 20px rgba(0, 0, 0, 0.4);
-text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    4px 4px 0 #4A2511;
+text-shadow: 2px 2px 0 #000;
 user-select: none;
 }
 
 .arcade-name-key:active {
 transform: translateY(2px);
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 3px 0 #4A2511,
-    0 5px 10px rgba(0, 0, 0, 0.4);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    2px 2px 0 #4A2511;
+}
+
+.arcade-name-keyboard-delete-column {
+display: flex;
+align-items: center;
+justify-content: center;
+align-self: center;
+}
+
+.arcade-name-key-delete {
+width: 168px;
+height: 112px;
+line-height: 112px;
+font-size: 38px;
+letter-spacing: 2px;
+border-width: 6px;
+border-radius: 10px;
+background: #B02A1A;
+box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    5px 5px 0 #4A2511;
+}
+
+.arcade-name-key-delete:active {
+box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    2px 2px 0 #4A2511;
 }
 
 .arcade-name-message {
 min-height: 30px;
 margin-top: 15px;
 text-align: center;
-font-size: 24px;
+font-size: 16px;
 color: #FF6B6B;
-text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+font-family: var(--arcade-font);
+font-weight: 900;
+letter-spacing: 1px;
+text-shadow: 2px 2px 0 #000;
 }
 
 .arcade-name-controls {
 margin-top: 10px;
 text-align: center;
-font-size: 20px;
+font-size: 14px;
 color: #FFE4B5;
-text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+font-family: var(--arcade-font);
+font-weight: 900;
+letter-spacing: 1px;
+text-shadow: 2px 2px 0 #000;
 }
 
 .arcade-name-confirm {
@@ -310,40 +550,37 @@ display: block;
 margin: 25px auto 0;
 padding: 20px 50px;
 border: 6px solid #654321;
-border-radius: 25px;
-background: 
-    radial-gradient(ellipse at 50% 30%, rgba(255, 248, 220, 0.3) 0%, transparent 60%),
-    linear-gradient(135deg, #32CD32 0%, #228B22 100%);
+border-radius: 10px;
+background: #2E8B57;
 color: #FFF8DC;
-font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
-font-size: 32px;
+font-family: var(--arcade-font);
+font-size: 24px;
 font-weight: bold;
+letter-spacing: 2px;
+text-transform: uppercase;
 cursor: pointer;
-text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+text-shadow: 2px 2px 0 #000;
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 6px 0 #4A2511,
-    0 12px 25px rgba(0, 0, 0, 0.5);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    5px 5px 0 #4A2511;
 transition: all 0.1s ease;
 }
 
 .arcade-name-confirm:hover {
 transform: translateY(-4px);
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 10px 0 #4A2511,
-    0 16px 30px rgba(0, 0, 0, 0.6);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    7px 7px 0 #4A2511;
 }
 
 .arcade-name-confirm:active {
 transform: translateY(2px);
 box-shadow: 
-    inset 0 2px 3px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.4),
-    0 4px 0 #4A2511,
-    0 8px 15px rgba(0, 0, 0, 0.5);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.12),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.3),
+    2px 2px 0 #4A2511;
 }
 
 .title-screen-overlay {
@@ -412,12 +649,519 @@ transform: translateY(3px);
 box-shadow: 0 4px 0 #582b07, 0 12px 28px rgba(0, 0, 0, 0.42);
 }
 
+.title-rules-modal {
+position: fixed;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%);
+width: min(680px, calc(100% - 36px));
+padding: 24px 28px;
+background: linear-gradient(165deg, rgba(11, 24, 47, 0.96), rgba(17, 43, 70, 0.96));
+border: 4px solid #f5d080;
+border-radius: 16px;
+box-shadow: 0 20px 55px rgba(0, 0, 0, 0.7);
+z-index: 126;
+text-align: left;
+}
+
+.title-rules-modal.hidden {
+display: none;
+}
+
+.title-rules-title {
+margin: 0 0 10px;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: clamp(28px, 4vw, 46px);
+letter-spacing: 2px;
+text-transform: uppercase;
+color: #fff0bf;
+}
+
+.title-rules-text {
+font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-size: clamp(17px, 2vw, 24px);
+line-height: 1.5;
+color: #eef5ff;
+margin-bottom: 16px;
+}
+
+.title-rules-close {
+padding: 10px 16px;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: 18px;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: #fff9e1;
+background: linear-gradient(180deg, #f8a53f 0%, #d67a15 100%);
+border: 3px solid #7a3f09;
+border-radius: 10px;
+cursor: pointer;
+}
+
+@keyframes titleButtonPopIn {
+0% {
+opacity: 0;
+transform: translateY(20px) scale(0.72);
+}
+65% {
+opacity: 1;
+transform: translateY(-4px) scale(1.08);
+}
+100% {
+opacity: 1;
+transform: translateY(0) scale(1);
+}
+}
+
+.title-screen-start.title-pop-in {
+opacity: 0;
+will-change: transform, opacity;
+animation: titleButtonPopIn 480ms cubic-bezier(0.2, 0.9, 0.2, 1.2) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.title-screen-start.title-pop-in {
+animation: none;
+opacity: 1;
+}
+}
+
 .title-screen-controls {
 margin-top: 24px;
 font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
 font-size: clamp(14px, 1.5vw, 19px);
 line-height: 1.5;
 color: #d9f2ff;
+}
+
+/* Credits Screen */
+.credits-overlay {
+position: fixed;
+inset: 0;
+z-index: 140;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 24px;
+background: rgba(0, 0, 0, 0.74);
+backdrop-filter: blur(3px);
+}
+
+.credits-overlay.hidden {
+display: none;
+}
+
+.credits-panel {
+width: min(720px, calc(100% - 32px));
+background: linear-gradient(160deg, #101e3e 0%, #0f2f4a 45%, #153b2b 100%);
+border: 6px solid #f5d080;
+border-radius: 18px;
+box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6);
+overflow: hidden;
+}
+
+.credits-title-bar {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 14px 20px;
+border-bottom: 3px solid rgba(245, 208, 128, 0.5);
+background: rgba(0, 0, 0, 0.24);
+}
+
+.credits-title {
+margin: 0;
+color: #fff2cf;
+font-family: 'Impact', 'Arial Black', sans-serif;
+text-transform: uppercase;
+letter-spacing: 2px;
+font-size: clamp(24px, 4vw, 40px);
+}
+
+.credits-close-btn {
+padding: 9px 14px;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: 16px;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: #fff9e1;
+background: linear-gradient(180deg, #dc3545, #b82835);
+border: 2px solid #7a1f2b;
+border-radius: 8px;
+cursor: pointer;
+}
+
+.credits-scroll-viewport {
+height: min(62vh, 520px);
+overflow-y: auto;
+padding: 24px;
+scrollbar-width: none;
+-ms-overflow-style: none;
+}
+
+.credits-scroll-viewport::-webkit-scrollbar {
+display: none;
+}
+
+.credits-scroll-track {
+text-align: center;
+padding-top: 35vh;
+padding-bottom: 35vh;
+}
+
+.credits-line {
+font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-size: clamp(16px, 2vw, 28px);
+line-height: 1.5;
+color: #f3f7ff;
+letter-spacing: 0.5px;
+margin: 2px 0;
+}
+
+.credits-line-strong {
+font-family: 'Impact', 'Arial Black', sans-serif;
+text-transform: uppercase;
+letter-spacing: 1.5px;
+color: #ffe8ad;
+}
+
+@media (prefers-reduced-motion: reduce) {
+.credits-scroll-viewport {
+overflow-y: auto;
+}
+
+.credits-scroll-track {
+padding-top: 12px;
+padding-bottom: 12px;
+}
+}
+
+/* Settings Menu Styles */
+.settings-overlay {
+position: fixed;
+inset: 0;
+z-index: 130;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 24px;
+background: rgba(0, 0, 0, 0.75);
+backdrop-filter: blur(3px);
+animation: fadeIn 0.3s ease-out;
+}
+
+.settings-overlay.hidden {
+display: none;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+
+.settings-panel {
+background:
+    radial-gradient(ellipse at 30% 20%, rgba(139, 90, 43, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(101, 67, 33, 0.3) 0%, transparent 50%),
+    linear-gradient(135deg, #8B5A2B 0%, #A0522D 25%, #8B4513 50%, #654321 75%, #5C4033 100%);
+border: 8px solid #4A2511;
+border-radius: 20px;
+box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.2),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.4),
+    0 0 0 3px #3D1F0F,
+    0 0 0 6px #8B5A2B,
+    0 20px 60px rgba(0, 0, 0, 0.8);
+max-width: 700px;
+width: calc(100% - 48px);
+max-height: 80vh;
+overflow-y: auto;
+color: #FFF8DC;
+display: flex;
+flex-direction: column;
+}
+
+.settings-title-bar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 24px 32px;
+border-bottom: 3px solid #4A2511;
+background: rgba(0, 0, 0, 0.3);
+margin-bottom: 24px;
+border-radius: 12px 12px 0 0;
+}
+
+.settings-title {
+margin: 0;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: 36px;
+letter-spacing: 2px;
+text-transform: uppercase;
+text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+color: #FFE4B5;
+}
+
+.settings-close-btn {
+background: none;
+border: none;
+color: #FFE4B5;
+font-size: 32px;
+cursor: pointer;
+padding: 0;
+width: 36px;
+height: 36px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 50%;
+transition: all 0.2s ease;
+}
+
+.settings-close-btn:hover {
+background: rgba(255, 255, 255, 0.1);
+transform: scale(1.15);
+}
+
+.settings-close-btn:active {
+transform: scale(0.9);
+}
+
+.settings-content {
+padding: 0 32px 24px;
+flex: 1;
+overflow-y: auto;
+}
+
+.settings-section {
+margin-bottom: 32px;
+}
+
+.settings-section:last-child {
+margin-bottom: 0;
+}
+
+.settings-label {
+display: block;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: 18px;
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-bottom: 12px;
+color: #FFE4B5;
+text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.settings-controls {
+display: flex;
+align-items: center;
+gap: 16px;
+flex-wrap: wrap;
+}
+
+.slider-container {
+flex: 1;
+min-width: 200px;
+position: relative;
+}
+
+.settings-slider {
+width: 100%;
+height: 8px;
+border-radius: 4px;
+background: linear-gradient(to right, #654321, #A0522D);
+outline: none;
+-webkit-appearance: none;
+appearance: none;
+cursor: pointer;
+box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.settings-slider::-webkit-slider-thumb {
+-webkit-appearance: none;
+appearance: none;
+width: 24px;
+height: 24px;
+border-radius: 50%;
+background: linear-gradient(135deg, #FFE4B5, #FFB347);
+border: 2px solid #8B4513;
+cursor: pointer;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+transition: all 0.2s ease;
+}
+
+.settings-slider::-webkit-slider-thumb:hover {
+transform: scale(1.1);
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.settings-slider::-moz-range-thumb {
+width: 24px;
+height: 24px;
+border-radius: 50%;
+background: linear-gradient(135deg, #FFE4B5, #FFB347);
+border: 2px solid #8B4513;
+cursor: pointer;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+transition: all 0.2s ease;
+}
+
+.settings-slider::-moz-range-thumb:hover {
+transform: scale(1.1);
+}
+
+.settings-value-label {
+font-family: monospace;
+font-size: 16px;
+font-weight: bold;
+color: #FFE4B5;
+min-width: 60px;
+text-align: right;
+}
+
+.settings-option-btn {
+flex: 1;
+min-width: 120px;
+padding: 12px 20px;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: 14px;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: #654321;
+background: linear-gradient(180deg, #FFE4B5, #FFD699);
+border: 3px solid #8B4513;
+border-radius: 8px;
+cursor: pointer;
+transition: all 0.2s ease;
+box-shadow: 0 4px 0 #654321;
+}
+
+.settings-option-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 0 #654321;
+}
+
+.settings-option-btn:active {
+transform: translateY(2px);
+box-shadow: 0 2px 0 #654321;
+}
+
+.settings-option-btn.selected {
+background: linear-gradient(180deg, #FFD700, #FFA500);
+border-color: #4A2511;
+color: #8B4513;
+box-shadow: 0 4px 0 #4A2511, inset 0 0 0 2px #FFE4B5;
+font-weight: bold;
+}
+
+.toggle-container {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.settings-toggle {
+width: 48px;
+height: 28px;
+appearance: none;
+-webkit-appearance: none;
+background: linear-gradient(135deg, #654321, #8B4513);
+border: 2px solid #4A2511;
+border-radius: 14px;
+cursor: pointer;
+position: relative;
+outline: none;
+transition: all 0.3s ease;
+box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.settings-toggle:checked {
+background: linear-gradient(135deg, #90EE90, #7CCD7C);
+}
+
+.settings-toggle::before {
+content: '';
+position: absolute;
+width: 22px;
+height: 22px;
+border-radius: 50%;
+background: #FFE4B5;
+top: 2px;
+left: 2px;
+transition: all 0.3s ease;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.settings-toggle:checked::before {
+left: 24px;
+}
+
+.settings-toggle:hover {
+box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 228, 181, 0.4);
+}
+
+.toggle-label {
+font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-size: 16px;
+color: #FFE4B5;
+cursor: pointer;
+user-select: none;
+}
+
+.settings-button-bar {
+display: flex;
+gap: 12px;
+padding: 24px 32px;
+border-top: 3px solid #4A2511;
+background: rgba(0, 0, 0, 0.3);
+margin-top: auto;
+border-radius: 0 0 12px 12px;
+justify-content: flex-end;
+}
+
+.settings-button {
+padding: 12px 28px;
+font-family: 'Impact', 'Arial Black', sans-serif;
+font-size: 16px;
+letter-spacing: 1px;
+text-transform: uppercase;
+border: 3px solid #4A2511;
+border-radius: 8px;
+cursor: pointer;
+transition: all 0.2s ease;
+box-shadow: 0 4px 0 #3D1F0F;
+}
+
+.settings-reset-btn {
+color: #fff9e1;
+background: linear-gradient(180deg, #dc3545, #b82835);
+border-color: #7a1f2b;
+}
+
+.settings-reset-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 0 #3D1F0F;
+}
+
+.settings-reset-btn:active {
+transform: translateY(2px);
+box-shadow: 0 2px 0 #3D1F0F;
+}
+
+.settings-apply-btn {
+color: #fff9e1;
+background: linear-gradient(180deg, #28a745, #1f7e34);
+border-color: #165023;
+}
+
+.settings-apply-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 6px 0 #165023;
+}
+
+.settings-apply-btn:active {
+transform: translateY(2px);
+box-shadow: 0 2px 0 #165023;
 }
 
 @media (max-width: 800px) {
@@ -435,7 +1179,7 @@ font-size: 14px;
 
 </style>
 </head>
-<body>
+<body translate="no" class="notranslate">
 <div id="info"></div>
 <div id="turnDisplay"></div>
 <!-- Libraries -->
@@ -454,8 +1198,10 @@ font-size: 14px;
 <script src="js/game/actors/positioning.js"></script>
 <!-- Debug Tools -->
 <script src="js/debug/grid.js"></script>
-<script src="js/debug/hud.js"></script>
 <script src="js/debug/grid-visual.js"></script>
+<script src="js/debug/fps-sampler.js"></script>
+<script src="js/debug/debug-stats-formatter.js"></script>
+<script src="js/debug/fps-counter.js"></script>
 <!-- Rendering -->
 <script src="js/rendering/environment.js"></script>
 <script src="js/rendering/sky.js"></script>
@@ -465,9 +1211,12 @@ font-size: 14px;
 <!-- Game Systems -->
 <script src="js/game/animations/player-animator.js"></script>
 <script src="js/game/animations/dice-animator.js"></script>
+<script src="js/game/ui/settings/settings-manager.js"></script>
+<script src="js/game/ui/settings/settings-menu.js"></script>
+<script src="js/game/ui/credits/credits-screen.js"></script>
 <script src="js/game/game-manager.js"></script>
-<script src="js/game/game-ui.js"></script>
-<script src="js/game/title-screen.js"></script>
+<script src="js/game/ui/game-ui.js"></script>
+<script src="js/game/ui/menu/title-screen.js"></script>
 <!-- Main Game Loop -->
 <script src="js/game/main.js"></script>
 </body>

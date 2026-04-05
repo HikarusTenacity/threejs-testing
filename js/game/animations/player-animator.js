@@ -9,6 +9,11 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
         playerStartPos: null,
         playerTargetPos: null,
         playerWalkPath: [],
+        speedMultiplier: 1,
+
+        setSpeedMultiplier: function(multiplier) {
+            this.speedMultiplier = Math.max(0.5, Math.min(2.0, multiplier || 1));
+        },
         
         init: function() {
             this.playerStartPos = new THREE.Vector3(this.playerPiece.position.x, this.playerPiece.position.y, this.playerPiece.position.z);
@@ -74,7 +79,7 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
         update: function() {
             if (!this.isAnimating) return false;
             
-            var elapsed = Date.now() - this.animationStartTime;
+            var elapsed = (Date.now() - this.animationStartTime) * this.speedMultiplier;
             var progress = Math.min(elapsed / this.animationDuration, 1);
             
             if (progress < 1) {

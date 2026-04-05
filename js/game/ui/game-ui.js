@@ -2,7 +2,7 @@
 function createGameUI(infoDiv) {
     var cornerPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
     var fallbackGuyColors = ['red', 'green', 'blue', 'yellow'];
-    var portraitWidth = 106;
+    var portraitWidth = 100;
     var portraitHeight = 100;
     var ui = {
         infoDiv: infoDiv,
@@ -53,11 +53,6 @@ function createGameUI(infoDiv) {
             confirmButton.textContent = 'Confirm Name';
             root.appendChild(confirmButton);
 
-            var controls = document.createElement('div');
-            controls.className = 'arcade-name-controls';
-            controls.textContent = 'Click on letters to enter name, click slots to edit, then click the Confirm Name button';
-            root.appendChild(controls);
-
             slots.addEventListener('click', this.handleNameSlotClick.bind(this));
             keyboard.addEventListener('click', this.handleNameKeyClick.bind(this));
             confirmButton.addEventListener('click', this.handleNameConfirmClick.bind(this));
@@ -72,29 +67,21 @@ function createGameUI(infoDiv) {
                 message: message,
                 confirmButton: confirmButton
             };
-            console.log('Name entry overlay created and added to DOM');
         },
 
         updateNameEntryOverlay: function(gameManager) {
-            if (!this.nameEntryOverlay) {
-                return;
-            }
+            if (!this.nameEntryOverlay) return;
 
             this.activeGameManager = gameManager;
 
             var overlay = this.nameEntryOverlay;
-            var showOverlay = gameManager.gameState === 'PRE_GAME_SELECT' &&
+            var showOverlay = 
+                gameManager.gameState === 'PRE_GAME_SELECT' &&
                 gameManager.isNameEntryActive &&
                 gameManager.isNameEntryActive();
 
-            // Only log occasionally to avoid spam
-            if (Math.random() < 0.1) {
-                console.log('Overlay check - gameState:', gameManager.gameState, 'isNameEntryActive method:', !!gameManager.isNameEntryActive, 'isNameEntryActive():', gameManager.isNameEntryActive ? gameManager.isNameEntryActive() : 'N/A', 'showOverlay:', showOverlay);
-            }
-
             if (!showOverlay) {
                 overlay.root.classList.add('hidden');
-                // Reset tracking variables when hidden
                 this.lastSelectedKey = null;
                 this.lastCursorPosition = -1;
                 this.lastPlayerIndex = -1;
@@ -105,9 +92,8 @@ function createGameUI(infoDiv) {
             var playerNumber = gameManager.selectingPlayerIndex + 1;
             overlay.root.classList.remove('hidden');
             
-            // Only update title if player changed
             if (this.lastPlayerIndex !== gameManager.selectingPlayerIndex) {
-                overlay.title.textContent = 'PLAYER ' + playerNumber + ' NAME ENTRY';
+                overlay.title.textContent = 'Player ' + playerNumber + ' Name Entry';
                 this.lastPlayerIndex = gameManager.selectingPlayerIndex;
             }
 
@@ -116,7 +102,8 @@ function createGameUI(infoDiv) {
             var currentSlotContent = entry ? entry.slots.join('') : '';
             
             // Only rebuild slots if cursor position or content changed
-            if (this.lastCursorPosition !== currentCursor || this.lastSlotContent !== currentSlotContent) {
+            if (this.lastCursorPosition !== currentCursor || 
+                this.lastSlotContent !== currentSlotContent) {
                 var slotsHtml = '';
                 if (entry) {
                     for (var i = 0; i < entry.slots.length; i++) {
@@ -136,6 +123,7 @@ function createGameUI(infoDiv) {
             if (this.lastSelectedKey !== selectedKey) {
                 var keyboardHtml = '';
                 var rows = gameManager.pregameNameKeyboardRows || [];
+                keyboardHtml += '<div class="arcade-name-keyboard-grid">';
                 for (var r = 0; r < rows.length; r++) {
                     keyboardHtml += '<div class="arcade-name-keyboard-row">';
                     var row = rows[r];
@@ -147,6 +135,10 @@ function createGameUI(infoDiv) {
                     }
                     keyboardHtml += '</div>';
                 }
+                keyboardHtml += '</div>';
+                keyboardHtml += '<div class="arcade-name-keyboard-delete-column">';
+                keyboardHtml += '<div class="arcade-name-key arcade-name-key-delete" data-action="delete">DEL</div>';
+                keyboardHtml += '</div>';
                 overlay.keyboard.innerHTML = keyboardHtml;
                 this.lastSelectedKey = selectedKey;
             }
@@ -179,6 +171,13 @@ function createGameUI(infoDiv) {
 
             var key = event.target.closest('.arcade-name-key');
             if (!key) {
+                return;
+            }
+
+            if (key.getAttribute('data-action') === 'delete') {
+                if (this.activeGameManager.deleteNameEntryCharacter) {
+                    this.activeGameManager.deleteNameEntryCharacter();
+                }
                 return;
             }
 
@@ -449,32 +448,8 @@ function createGameUI(infoDiv) {
             var currentSpaceName = getSpaceName(currentPlayer.currentSpace) || ('Space ' + currentPlayer.currentSpace);
             var currentSpaceType = getSpaceType(currentPlayer.currentSpace) || 'UNKNOWN';
             var html = '<div style="color: #' + currentPlayer.color.toString(16).padStart(6, '0') + ';">';
-            if (gameManager.gameState === 'PRE_GAME_SELECT') {
-                html += '<strong>Character Select</strong><br>';
-                html += '<em>Player ' + (gameManager.selectingPlayerIndex + 1) + '</em><br>';
-                if (gameManager.isNameEntryActive && gameManager.isNameEntryActive()) {
-                    html += '<em>Use center-screen name panel</em><br>';
-                } else {
-                    html += '<em>Choose your character</em><br>';
-                }
-            } else if (gameManager.gameState === 'PRE_GAME_ROLL_RESULTS') {
-                html += '<strong>Turn Order Roll</strong><br>';
-                html += '<em>Each player rolled 1 die</em><br>';
-            } else {
-                html += '<strong>' + currentPlayer.name + '\'s Turn</strong><br>';
-                html += 'Space: ' + currentPlayer.currentSpace + ' - ' + currentSpaceName + ' (' + currentSpaceType + ')<br>';
-                html += 'Currency: ' + currentPlayer.currency + '<br>';
-                html += 'Buff Slots: ' + (currentPlayer.buffs ? currentPlayer.buffs.length : 0) + ' / ' + MAX_PLAYER_BUFF_SLOTS + '<br>';
-            }
-            
-            if (gameManager.gameState === 'TURN_START') {
-                html += '<em>Press V to Roll Dice</em><br>';
-            } else if (gameManager.gameState === 'ROLLING') {
-                html += '<em style="color: #ffff00;">ROLLING...</em><br>';
-            } else if (gameManager.gameState === 'MOVING') {
-                html += '<em style="color: #ffff00;">Dice Roll: ' + gameManager.diceRoll + '</em><br>';
-                html += '<em>Press V again to End Turn</em><br>';
-            }
+            html += '<strong>' + currentPlayer.name + '\'s Turn</strong><br>';
+            html += 'Space: ' + currentPlayer.currentSpace + ' - ' + currentSpaceName + ' (' + currentSpaceType + ')<br>';
             
             html += '<br><strong>Players:</strong><br>';
             for (var i = 0; i < PLAYERS.length; i++) {
@@ -497,9 +472,11 @@ function createGameUI(infoDiv) {
                 } else if (gameManager.gameState === 'PRE_GAME_SELECT') {
                     var selectingMarker = (i === gameManager.selectingPlayerIndex) ? '► ' : '  ';
                     var statusLabel = '';
-                    if (i === gameManager.selectingPlayerIndex && gameManager.isNameEntryActive && gameManager.isNameEntryActive()) {
+                    if (i === gameManager.selectingPlayerIndex && 
+                        gameManager.isNameEntryActive && 
+                        gameManager.isNameEntryActive()) {
                         statusLabel = ' (Naming)';
-                    }
+                    } 
                     html += selectingMarker + '<span style="color: #' + playerColor + ';">' + player.name + statusLabel + ' [' + pieceLabel + '] | $' + currencyLabel + ' | Buffs ' + buffLabel + '</span><br>';
                 } else {
                     html += marker + '<span style="color: #' + playerColor + ';">' + player.name + ' [' + pieceLabel + '] (Space ' + player.currentSpace + ') | $' + currencyLabel + ' | Buffs ' + buffLabel + '</span><br>';
@@ -513,28 +490,6 @@ function createGameUI(infoDiv) {
                     html += (t + 1) + '. ' + PLAYERS[orderPlayerIndex].name + '<br>';
                 }
             }
-            
-            html += '<br><strong>Controls:</strong><br>';
-            if (gameManager.gameState === 'PRE_GAME_SELECT') {
-                if (gameManager.isNameEntryActive && gameManager.isNameEntryActive()) {
-                    html += 'A/D or Left/Right: Change letter<br>';
-                    html += 'W/S or Up/Down: Move cursor<br>';
-                    html += 'V: Confirm name<br>';
-                    html += 'Mouse Click Key/Slot: Edit name<br>';
-                    html += 'Mouse Click Character: Confirm name + select<br>';
-                } else {
-                    html += 'Mouse: Hover + Click Character<br>';
-                    html += 'A/D or Left/Right: Select character<br>';
-                    html += 'V: Lock character<br>';
-                }
-            } else if (gameManager.gameState === 'PRE_GAME_ROLL_RESULTS') {
-                html += 'V: Start Match<br>';
-            } else {
-                html += 'Press V to Roll Dice<br>';
-                html += 'Press V again to End Turn<br>';
-            }
-            html += '</div>';
-            
             this.infoDiv.innerHTML = html;
             this.updateCornerPanels(gameManager);
             this.updateNameEntryOverlay(gameManager);

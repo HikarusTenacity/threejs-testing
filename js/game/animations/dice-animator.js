@@ -19,6 +19,11 @@ function createDiceAnimator(scene, camera) {
         waitAfterRollStartTime: 0,
         waitAfterRollDuration: 1000,  // 1 second wait
         gameManager: null,
+        speedMultiplier: 1,
+
+        setSpeedMultiplier: function(multiplier) {
+            this.speedMultiplier = Math.max(0.5, Math.min(2.0, multiplier || 1));
+        },
         
         setupCutscene: function() {
             //get original camera position
@@ -127,7 +132,7 @@ function createDiceAnimator(scene, camera) {
             if (!this.isAnimating) return;
             
             if (this.animationPhase === 'PAN') {
-                var elapsed = Date.now() - this.animationStartTime;
+                var elapsed = (Date.now() - this.animationStartTime) * this.speedMultiplier;
                 var progress = Math.min(elapsed / this.animationDuration, 1);
                 
                 this.updateCameraAnimation(progress);
@@ -142,7 +147,7 @@ function createDiceAnimator(scene, camera) {
                     }
                 }
             } else if (this.animationPhase === 'ROLLING') {
-                var elapsed = Date.now() - this.animationStartTime;
+                var elapsed = (Date.now() - this.animationStartTime) * this.speedMultiplier;
                 var progress = Math.min(elapsed / this.animationDuration, 1);
                 
                 // Animate dice rolling onto the floor in front of player
@@ -206,12 +211,13 @@ function createDiceAnimator(scene, camera) {
                     this.showTurnDisplay(this.currentPlayerName, this.currentPlayerColor, 'Rolled: ' + this.result);
                 }
             } else if (this.animationPhase === 'WAIT_AFTER_ROLL') {
-                var elapsed = Date.now() - this.waitAfterRollStartTime;
+                var elapsed = (Date.now() - this.waitAfterRollStartTime) * this.speedMultiplier;
                 
                 if (elapsed >= this.waitAfterRollDuration) {
                     // Start moving
                     this.animationPhase = 'MOVING';
                     this.playerAnimator = createPlayerAnimator(this.currentPlayerPiece, this.targetSpaceId);
+                    this.playerAnimator.setSpeedMultiplier(this.speedMultiplier);
                     this.hideTurnDisplay();
                 }
             } else if (this.animationPhase === 'MOVING') {

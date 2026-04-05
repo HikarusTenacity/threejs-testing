@@ -1,4 +1,4 @@
-function normalizePieceToSharedSize(piece, targetSize) {
+function normalizePieceSize(piece, targetSize) {
     piece.updateMatrixWorld(true);
 
     var box = new THREE.Box3().setFromObject(piece);
@@ -20,45 +20,37 @@ function normalizePieceToSharedSize(piece, targetSize) {
     piece.updateMatrixWorld(true);
     box.setFromObject(piece);
     piece.position.y -= box.min.y;
-
-    piece.userData.hitboxSize = targetSize;
 }
 
-function placePieceOnBoard(piece, x, z, boardY, clearance) {
+function placePieceOnGround(piece, x, z, groundY) {
     piece.position.x = x;
     piece.position.z = z;
 
     piece.updateMatrixWorld(true);
     var box = new THREE.Box3().setFromObject(piece);
-    var deltaY = (boardY + clearance) - box.min.y;
+    var deltaY = groundY - box.min.y;
     piece.position.y += deltaY;
 }
 
 function createGamePieces() {
     var pieces = [];
-    var sharedHitboxSize = 1.4;
-    var boardY = -1.0;
-    var clearance = 0.02;
+    var sharedSize = 1.4;
+    var groundY = -1.0;
+    var pieceConfigs = [
+        { color: "red", x: -4, z: -2 },
+        { color: "green", x: -1.2, z: -2.2 },
+        { color: "blue", x: 2.6, z: -1.4 },
+        { color: "yellow", x: 4.5, z: -2.5 }
+    ];
 
-    var redGuy = createGuy("red");
-    normalizePieceToSharedSize(redGuy, sharedHitboxSize);
-    placePieceOnBoard(redGuy, -4, -2, boardY, clearance);
-    pieces.push(redGuy);
+    for (var i = 0; i < pieceConfigs.length; i++) {
+        var config = pieceConfigs[i];
+        var piece = createGuy(config.color);
 
-    var greenGuy = createGuy("green");
-    normalizePieceToSharedSize(greenGuy, sharedHitboxSize);
-    placePieceOnBoard(greenGuy, -1.2, -2.2, boardY, clearance);
-    pieces.push(greenGuy);
-
-    var blueGuy = createGuy("blue");
-    normalizePieceToSharedSize(blueGuy, sharedHitboxSize);
-    placePieceOnBoard(blueGuy, 2.6, -1.4, boardY, clearance);
-    pieces.push(blueGuy);
-
-    var yellowGuy = createGuy("yellow");
-    normalizePieceToSharedSize(yellowGuy, sharedHitboxSize);
-    placePieceOnBoard(yellowGuy, 4.5, -2.5, boardY, clearance);
-    pieces.push(yellowGuy);
+        normalizePieceSize(piece, sharedSize);
+        placePieceOnGround(piece, config.x, config.z, groundY);
+        pieces.push(piece);
+    }
 
     return pieces;
 }

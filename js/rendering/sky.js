@@ -1,5 +1,6 @@
 // Sky elements - sun, clouds, fog, background
 var cloudsToUpdate = [];
+var cloudEffectsEnabled = true;
 
 function setupSky(scene, directionalLight) {
     var sunColor = 0xffff00;
@@ -37,7 +38,19 @@ function setupSky(scene, directionalLight) {
 }
 
 function updateClouds() {
+    if (!cloudEffectsEnabled) {
+        return;
+    }
+
     for (var i = 0; i < cloudsToUpdate.length; i++) {
         updateCloudPosition(cloudsToUpdate[i]);
+    }
+}
+
+function setCloudEffectsEnabled(enabled) {
+    cloudEffectsEnabled = !!enabled;
+
+    for (var i = 0; i < cloudsToUpdate.length; i++) {
+        cloudsToUpdate[i].visible = cloudEffectsEnabled;
     }
 }
