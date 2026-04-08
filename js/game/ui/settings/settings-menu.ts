@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Settings Menu UI
 function createSettingsMenu(settingsManager) {
     var root = document.createElement('div');
@@ -61,17 +62,11 @@ function createSettingsMenu(settingsManager) {
     gameSpeedSection.appendChild(gameSpeedSection.speedValue);
     content.appendChild(gameSpeedSection);
 
-    // Shadows Toggle
-    var shadowsSection = createSettingSection('Shadows');
-    shadowsSection.shadowsToggle = createToggleButton('Shadows', settingsManager.areShadowsEnabled());
-    shadowsSection.appendChild(shadowsSection.shadowsToggle);
-    content.appendChild(shadowsSection);
-
-    // Effects Toggle
-    var effectsSection = createSettingSection('Visual Effects');
-    effectsSection.effectsToggle = createToggleButton('Effects', settingsManager.areEffectsEnabled());
-    effectsSection.appendChild(effectsSection.effectsToggle);
-    content.appendChild(effectsSection);
+    // Retro Mode Toggle
+    var retroModeSection = createSettingSection('Retro Mode');
+    retroModeSection.retroModeToggle = createToggleButton('Retro Mode', settingsManager.isRetroModeEnabled());
+    retroModeSection.appendChild(retroModeSection.retroModeToggle);
+    content.appendChild(retroModeSection);
 
     settingsPanel.appendChild(content);
 
@@ -156,8 +151,7 @@ function createSettingsMenu(settingsManager) {
                         }
                     });
                     
-                    shadowsSection.shadowsToggle.updateToggle(settingsManager.areShadowsEnabled());
-                    effectsSection.effectsToggle.updateToggle(settingsManager.areEffectsEnabled());
+                    retroModeSection.retroModeToggle.updateToggle(settingsManager.isRetroModeEnabled());
                 }
             });
         },
@@ -199,20 +193,11 @@ function createSettingsMenu(settingsManager) {
             });
         },
 
-        onShadowsToggle: function(callback) {
+        onRetroModeToggle: function(callback) {
             if (typeof callback !== 'function') {
                 return;
             }
-            shadowsSection.shadowsToggle.addEventListener('change', function(e) {
-                callback(e.target.checked);
-            });
-        },
-
-        onEffectsToggle: function(callback) {
-            if (typeof callback !== 'function') {
-                return;
-            }
-            effectsSection.effectsToggle.addEventListener('change', function(e) {
+            retroModeSection.retroModeToggle.addEventListener('change', function(e) {
                 callback(e.target.checked);
             });
         }

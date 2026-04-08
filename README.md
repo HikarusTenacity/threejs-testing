@@ -1,6 +1,26 @@
 # threejs-testing
 
 
+## Dev workflow
+
+- `npm install`
+- `npm run dev` (auto-compile TS bundle in watch mode + Vite live reload)
+- `npm run typecheck` (TypeScript checks over TS sources)
+- `npm run build:game` (compile TS back into browser runtime JS files)
+- `npm run clean:js` (remove legacy per-file JS sources under `js/`)
+
+TypeScript is configured in `tsconfig.json` with:
+- `allowJs: false`
+- `checkJs: false`
+- `noEmit: true`
+
+Runtime JS is emitted as a single bundle at `dist/game.bundle.js` via `tsconfig.bundle.json`, so `.ts` files are now the editable source of truth.
+
+During `npm run dev`:
+- TypeScript rebuilds `dist/game.bundle.js` automatically when `.ts` files change.
+- Vite serves the app and triggers full-page reload when the bundle file changes.
+
+
 Red - National Rifle Association (the letter "A")
 Green - Mental Health Liason Group (ribbon)
 Blue - Sierra Club (recycling)

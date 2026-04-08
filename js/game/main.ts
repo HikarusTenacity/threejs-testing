@@ -2,7 +2,7 @@
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
-var retroMode = true;
+var retroMode = false;
 var retroOverlay = null;
 var renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' });
 var pixelScale = retroMode ? 2 : 1;
@@ -30,10 +30,36 @@ renderer.domElement.style.height = '100%';
 renderer.domElement.style.position = 'absolute';
 renderer.domElement.style.left = '0';
 renderer.domElement.style.top = '0';
-renderer.domElement.classList.add('retro-canvas');
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
+
+function syncRetroUiMode() {
+    (window as any).__RETRO_MODE__ = !!retroMode;
+    document.body.classList.toggle('retro-ui', !!retroMode);
+    renderer.domElement.classList.toggle('retro-canvas', !!retroMode);
+}
+
+syncRetroUiMode();
+
+function setRetroModeEnabled(enabled) {
+    retroMode = !!enabled;
+    pixelScale = retroMode ? 2 : 1;
+
+    syncRetroUiMode();
+
+    if (retroMode) {
+        createRetroOverlay();
+    } else {
+        if (retroOverlay && retroOverlay.parentNode) {
+            retroOverlay.parentNode.removeChild(retroOverlay);
+        }
+        retroOverlay = null;
+        renderer.domElement.style.filter = '';
+    }
+
+    syncViewportSize();
+}
 
 function createRetroOverlay() {
     if (!retroMode) {
@@ -46,9 +72,7 @@ function createRetroOverlay() {
 }
 
 function updateRetroScreenEffects() {
-    if (!retroMode) {
-        return;
-    }
+    if (!retroMode) return;
 
     renderer.domElement.style.transform = 'translate(0px, 0px)';
     renderer.domElement.style.filter =
@@ -110,54 +134,45 @@ function setSceneShadowsEnabled(enabled) {
 }
 
 function applyMasterVolume(volume) {
+    // clamp all volumes to a value between 0 and 1
     var clamped = Math.max(0, Math.min(1, volume));
 
-    var mediaNodes = document.querySelectorAll('audio, video');
-    for (var i = 0; i < mediaNodes.length; i++) {
-        mediaNodes[i].volume = clamped;
-    }
+    var mediaNodes = document.querySelectorAll('audio, video') as NodeListOf<HTMLMediaElement>;
+    for (var i = 0; i < mediaNodes.length; i++) mediaNodes[i].volume = clamped;
 
     // Fallback global volume for future sound effects codepaths.
-    window.__GAME_MASTER_VOLUME__ = clamped;
+    (window as any).__GAME_MASTER_VOLUME__ = clamped;
 }
 
 function applyGraphicsQuality(quality) {
-    var pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    var shadowsEnabled = quality !== 'low';
+    var effectsEnabled = quality === 'high';
 
-    if (quality === 'low') {
-        pixelRatio = Math.min(pixelRatio, 0.85);
-        renderer.shadowMap.type = THREE.BasicShadowMap;
-    } else if (quality === 'medium') {
-        pixelRatio = Math.min(pixelRatio, 1.2);
-        renderer.shadowMap.type = THREE.PCFShadowMap;
-    } else {
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    setSceneShadowsEnabled(shadowsEnabled);
+
+    if (typeof setCloudEffectsEnabled === 'function') {
+        setCloudEffectsEnabled(effectsEnabled);
     }
 
-    if (retroMode) {
-        pixelRatio = Math.min(pixelRatio, 0.85);
-    }
+    if (typeof setEnvironmentQuality === 'function') setEnvironmentQuality(quality);
 
-    renderer.setPixelRatio(pixelRatio);
-    syncViewportSize();
+    if (typeof setSkyQuality === 'function') {
+        setSkyQuality(quality);
+    }
 }
 
 function applySettings(settings) {
     applyMasterVolume(settings.volume);
+    setRetroModeEnabled(settings.retroMode);
     applyGraphicsQuality(settings.graphicsQuality);
-    setSceneShadowsEnabled(settings.shadowsEnabled);
     gameManager.setGameSpeed(settings.gameSpeed);
-
-    if (typeof setCloudEffectsEnabled === 'function') {
-        setCloudEffectsEnabled(settings.effectsEnabled);
-    }
 }
 
 settingsManager.subscribe(applySettings);
 applySettings(settingsManager.getAll());
 
 window.addEventListener('resize', function() {
-    applyGraphicsQuality(settingsManager.get('graphicsQuality'));
+    applyGraphicsQuality(settingsManager.getSetting('graphicsQuality'));
 });
 
 settingsMenu.onVolumeChange(function(value) {
@@ -172,12 +187,8 @@ settingsMenu.onGameSpeedChange(function(speed) {
     settingsManager.setGameSpeed(speed);
 });
 
-settingsMenu.onShadowsToggle(function(enabled) {
-    settingsManager.setShadowsEnabled(enabled);
-});
-
-settingsMenu.onEffectsToggle(function(enabled) {
-    settingsManager.setEffectsEnabled(enabled);
+settingsMenu.onRetroModeToggle(function(enabled) {
+    settingsManager.setRetroMode(enabled);
 });
 
 settingsMenu.onReset(function() {
@@ -220,6 +231,8 @@ var render = function () {
     if (!hasGameStarted) {
         camera.position.set(0, 0.7, 5.2);
         camera.lookAt(0, 0.8, 0);
+        applyIdleAnimations(worldPieces, Date.now());
+        updateEnvironmentAnimations(Date.now());
         updateRetroScreenEffects();
         renderer.render(scene, camera);
         fpsCounter.update({ renderer: renderer, gameManager: gameManager });
@@ -244,6 +257,9 @@ var render = function () {
     if (!gameManager.diceAnimator.isAnimating && !gameManager.isPregame()) {
         updateAllPiecePositions();
     }
+
+    applyIdleAnimations(worldPieces, Date.now());
+    updateEnvironmentAnimations(Date.now());
 
     // Update game UI
     gameUI.update(gameManager);

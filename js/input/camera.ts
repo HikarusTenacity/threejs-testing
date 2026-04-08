@@ -1,5 +1,5 @@
 // Camera controls and management
-function setupCameraControls(camera, scene) {
+function setupCameraControls(camera: any, scene: any) {
     camera.position.set(0, 8, 15);
     camera.lookAt(0, 0, 0);
 
@@ -9,7 +9,8 @@ function setupCameraControls(camera, scene) {
         previousMouseY: 0,
         cameraAngleX: 0,
         cameraAngleY: 0.5,
-        cameraDistance: 17
+        cameraDistance: 17,
+        updateCamera: function() {}
     };
 
     // Mouse down event

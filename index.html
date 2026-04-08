@@ -31,24 +31,27 @@ font-display: swap;
 }
 
 :root {
---arcade-font: 'Kurokane';
+--ui-font: 'Kurokane', 'Impact', 'Arial Black', sans-serif;
+--content-font: 'Avenir Next', 'Avenir', 'Segoe UI', sans-serif;
+--game-font: var(--ui-font);
+--font: var(--ui-font);
 /* Lofi text tuning: edit these values only */
---lofi-text-downscale-static: 0.66;
---lofi-text-upscale-static: 1.52;
---lofi-text-blur-static: 0.85px;
---lofi-text-blur-controls: 0.68px;
+--lofi-text-downscale-static: 1;
+--lofi-text-upscale-static: 1;
+--lofi-text-blur-static: 0px;
+--lofi-text-blur-controls: 0px;
 }
 
-#info,
-#turnDisplay,
-.player-corner,
-.arcade-name-overlay,
-.title-screen-overlay,
-.title-rules-modal,
-.credits-overlay,
-.credits-panel,
-.settings-overlay,
-.settings-panel {
+body.retro-ui #info,
+body.retro-ui #turnDisplay,
+body.retro-ui .player-corner,
+body.retro-ui .name-overlay,
+body.retro-ui .title-screen-overlay,
+body.retro-ui .title-rules-modal,
+body.retro-ui .credits-overlay,
+body.retro-ui .credits-panel,
+body.retro-ui .settings-overlay,
+body.retro-ui .settings-panel {
 font-smooth: never;
 -webkit-font-smoothing: none;
 -moz-osx-font-smoothing: grayscale;
@@ -56,21 +59,21 @@ text-rendering: optimizeSpeed;
 }
 
 /* Downscale then upscale static text blocks to mimic low-resolution rasterized text. */
-.arcade-name-title,
-.arcade-name-message,
-.arcade-name-controls,
-.title-screen-logo,
-.title-screen-subtitle,
-.title-screen-controls,
-.title-rules-title,
-.title-rules-text,
-.credits-title,
-.credits-line,
-.credits-line-strong,
-.settings-title,
-.settings-label,
-.settings-value-label,
-.toggle-label {
+body.retro-ui .name-title,
+body.retro-ui .name-message,
+body.retro-ui .name-controls,
+body.retro-ui .title-screen-logo,
+body.retro-ui .title-screen-subtitle,
+body.retro-ui .title-screen-controls,
+body.retro-ui .title-rules-title,
+body.retro-ui .title-rules-text,
+body.retro-ui .credits-title,
+body.retro-ui .credits-line,
+body.retro-ui .credits-line-strong,
+body.retro-ui .settings-title,
+body.retro-ui .settings-label,
+body.retro-ui .settings-value-label,
+body.retro-ui .toggle-label {
 zoom: var(--lofi-text-downscale-static);
 transform: scale(var(--lofi-text-upscale-static));
 transform-origin: center;
@@ -78,19 +81,28 @@ filter: blur(var(--lofi-text-blur-static));
 }
 
 /* Keep transform-heavy controls functional while softening text fidelity. */
-.arcade-name-slot,
-.arcade-name-key,
-.arcade-name-key-delete,
-.arcade-name-confirm,
-.title-screen-start,
-.title-rules-close,
-.credits-close-btn,
-.settings-option-btn,
-.settings-button,
-#info,
-#turnDisplay,
-.player-corner {
+body.retro-ui .name-slot,
+body.retro-ui .name-key,
+body.retro-ui .name-key-delete,
+body.retro-ui .title-screen-start,
+body.retro-ui .title-rules-close,
+body.retro-ui .credits-close-btn,
+body.retro-ui .settings-option-btn,
+body.retro-ui .settings-button,
+body.retro-ui #info,
+body.retro-ui #turnDisplay,
+body.retro-ui .player-corner {
 filter: blur(var(--lofi-text-blur-controls));
+}
+
+/* Keep key action controls readable in retro mode. */
+body.retro-ui .name-confirm,
+body.retro-ui .title-screen-start,
+body.retro-ui .title-rules-close,
+body.retro-ui .credits-close-btn,
+body.retro-ui .settings-button,
+body.retro-ui .settings-option-btn {
+filter: none;
 }
 
 html, body { width: 100%; height: 100%; margin: 0; padding: 0; }
@@ -193,7 +205,7 @@ transform: translateY(-50%);
 background: rgba(0,0,0,0.7);
 color: #00ff00;
 padding: 15px;
-font-family: monospace;
+font-family: var(--content-font);
 font-size: 14px;
 border: 1px solid #00ff00;
 pointer-events: none;
@@ -207,7 +219,7 @@ transform: translateX(-50%);
 background: none;
 color: white;
 padding: 20px;
-font-family: 'Impact', 'Comic Sans MS', cursive, sans-serif;
+font-family: var(--content-font);
 font-size: 80px;
 font-weight: bold;
 text-align: center;
@@ -229,7 +241,7 @@ min-width: 180px;
 background: rgba(0,0,0,0.72);
 color: white;
 padding: 10px;
-font-family: monospace;
+font-family: var(--content-font);
 font-size: 12px;
 border: 1px solid #ffffff33;
 pointer-events: none;
@@ -324,7 +336,7 @@ border-radius: 6px;
 background: currentColor;
 }
 
-.arcade-name-overlay {
+.name-overlay {
 position: fixed;
 left: 50%;
 top: 50%;
@@ -343,7 +355,7 @@ box-shadow:
     10px 10px 0 #5A3316,
     20px 20px 0 rgba(0, 0, 0, 0.4);
 color: #FFF8DC;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-weight: 900;
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -358,18 +370,18 @@ justify-content: space-around;
 align-items: center;
 }
 
-.arcade-name-overlay.hidden {
+.name-overlay.hidden {
 display: none;
 }
 
-.arcade-name-title {
+.name-title {
 font-size: 40px;
 font-weight: bold;
 letter-spacing: 0;
 margin-bottom: 20px;
 text-align: center;
 color: #FFE4B5;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-weight: 900;
 text-transform: uppercase;
 font-smooth: never;
@@ -380,21 +392,21 @@ text-shadow:
     4px 4px 0 #4A2511;
 }
 
-.arcade-name-slots {
+.name-slots {
 display: flex;
 justify-content: center;
 gap: 15px;
 margin-bottom: 30px;
 }
 
-.arcade-name-slot {
+.name-slot {
 width: 70px;
 height: 80px;
 line-height: 80px;
 text-align: center;
 font-size: 44px;
 font-weight: bold;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-weight: 900;
 letter-spacing: 0;
 font-smooth: never;
@@ -413,7 +425,7 @@ box-shadow:
 transition: transform 0.1s ease;
 }
 
-.arcade-name-slot:hover {
+.name-slot:hover {
 transform: translateY(-3px);
 box-shadow: 
     inset 3px 3px 0 rgba(255, 255, 255, 0.12),
@@ -421,7 +433,7 @@ box-shadow:
     6px 6px 0 #4A2511;
 }
 
-.arcade-name-slot.active {
+.name-slot.active {
 border-color: #FFD700;
 background: #D4A017;
 color: #FFFAF0;
@@ -431,7 +443,7 @@ box-shadow:
     4px 4px 0 #B8860B;
 }
 
-.arcade-name-keyboard-row {
+.name-keyboard-row {
 display: flex;
 justify-content: center;
 gap: 12px;
@@ -439,7 +451,7 @@ margin-bottom: 12px;
 width: 100%;
 }
 
-.arcade-name-keyboard {
+.name-keyboard {
 pointer-events: auto;
 margin-bottom: 20px;
 display: flex;
@@ -454,20 +466,20 @@ margin-right: auto;
 align-self: center;
 }
 
-.arcade-name-keyboard-grid {
+.name-keyboard-grid {
 display: flex;
 flex-direction: column;
 align-items: center;
 }
 
-.arcade-name-key {
+.name-key {
 width: 72px;
 height: 70px;
 line-height: 70px;
 text-align: center;
 font-size: 30px;
 font-weight: bold;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-weight: 900;
 font-smooth: never;
 -webkit-font-smoothing: none;
@@ -485,7 +497,7 @@ text-shadow: 2px 2px 0 #000;
 user-select: none;
 }
 
-.arcade-name-key:active {
+.name-key:active {
 transform: translateY(2px);
 box-shadow: 
     inset 3px 3px 0 rgba(255, 255, 255, 0.12),
@@ -493,14 +505,14 @@ box-shadow:
     2px 2px 0 #4A2511;
 }
 
-.arcade-name-keyboard-delete-column {
+.name-keyboard-delete-column {
 display: flex;
 align-items: center;
 justify-content: center;
 align-self: center;
 }
 
-.arcade-name-key-delete {
+.name-key-delete {
 width: 168px;
 height: 112px;
 line-height: 112px;
@@ -515,37 +527,37 @@ box-shadow:
     5px 5px 0 #4A2511;
 }
 
-.arcade-name-key-delete:active {
+.name-key-delete:active {
 box-shadow:
     inset 3px 3px 0 rgba(255, 255, 255, 0.12),
     inset -3px -3px 0 rgba(0, 0, 0, 0.3),
     2px 2px 0 #4A2511;
 }
 
-.arcade-name-message {
+.name-message {
 min-height: 30px;
 margin-top: 15px;
 text-align: center;
 font-size: 16px;
 color: #FF6B6B;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-weight: 900;
 letter-spacing: 1px;
 text-shadow: 2px 2px 0 #000;
 }
 
-.arcade-name-controls {
+.name-controls {
 margin-top: 10px;
 text-align: center;
 font-size: 14px;
 color: #FFE4B5;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-weight: 900;
 letter-spacing: 1px;
 text-shadow: 2px 2px 0 #000;
 }
 
-.arcade-name-confirm {
+.name-confirm {
 display: block;
 margin: 25px auto 0;
 padding: 20px 50px;
@@ -553,7 +565,7 @@ border: 6px solid #654321;
 border-radius: 10px;
 background: #2E8B57;
 color: #FFF8DC;
-font-family: var(--arcade-font);
+font-family: var(--ui-font);
 font-size: 24px;
 font-weight: bold;
 letter-spacing: 2px;
@@ -567,7 +579,7 @@ box-shadow:
 transition: all 0.1s ease;
 }
 
-.arcade-name-confirm:hover {
+.name-confirm:hover {
 transform: translateY(-4px);
 box-shadow: 
     inset 3px 3px 0 rgba(255, 255, 255, 0.12),
@@ -575,7 +587,7 @@ box-shadow:
     7px 7px 0 #4A2511;
 }
 
-.arcade-name-confirm:active {
+.name-confirm:active {
 transform: translateY(2px);
 box-shadow: 
     inset 3px 3px 0 rgba(255, 255, 255, 0.12),
@@ -606,7 +618,7 @@ display: none;
 
 .title-screen-logo {
 margin: 0;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(42px, 9vw, 120px);
 letter-spacing: 3px;
 text-transform: uppercase;
@@ -618,7 +630,7 @@ text-shadow:
 .title-screen-subtitle {
 max-width: 680px;
 margin: 18px 0 34px;
-font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(16px, 2.2vw, 28px);
 line-height: 1.3;
 color: #f5e8bf;
@@ -626,7 +638,7 @@ color: #f5e8bf;
 
 .title-screen-start {
 padding: 18px 54px;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(24px, 3.2vw, 42px);
 letter-spacing: 2px;
 text-transform: uppercase;
@@ -670,7 +682,7 @@ display: none;
 
 .title-rules-title {
 margin: 0 0 10px;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(28px, 4vw, 46px);
 letter-spacing: 2px;
 text-transform: uppercase;
@@ -678,7 +690,7 @@ color: #fff0bf;
 }
 
 .title-rules-text {
-font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(17px, 2vw, 24px);
 line-height: 1.5;
 color: #eef5ff;
@@ -687,7 +699,7 @@ margin-bottom: 16px;
 
 .title-rules-close {
 padding: 10px 16px;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: 18px;
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -728,7 +740,7 @@ opacity: 1;
 
 .title-screen-controls {
 margin-top: 24px;
-font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(14px, 1.5vw, 19px);
 line-height: 1.5;
 color: #d9f2ff;
@@ -772,7 +784,7 @@ background: rgba(0, 0, 0, 0.24);
 .credits-title {
 margin: 0;
 color: #fff2cf;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 text-transform: uppercase;
 letter-spacing: 2px;
 font-size: clamp(24px, 4vw, 40px);
@@ -780,7 +792,7 @@ font-size: clamp(24px, 4vw, 40px);
 
 .credits-close-btn {
 padding: 9px 14px;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: 16px;
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -810,7 +822,7 @@ padding-bottom: 35vh;
 }
 
 .credits-line {
-font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-family: var(--ui-font);
 font-size: clamp(16px, 2vw, 28px);
 line-height: 1.5;
 color: #f3f7ff;
@@ -819,7 +831,7 @@ margin: 2px 0;
 }
 
 .credits-line-strong {
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 text-transform: uppercase;
 letter-spacing: 1.5px;
 color: #ffe8ad;
@@ -894,7 +906,7 @@ border-radius: 12px 12px 0 0;
 
 .settings-title {
 margin: 0;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: 36px;
 letter-spacing: 2px;
 text-transform: uppercase;
@@ -943,7 +955,7 @@ margin-bottom: 0;
 
 .settings-label {
 display: block;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: 18px;
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -1011,7 +1023,7 @@ transform: scale(1.1);
 }
 
 .settings-value-label {
-font-family: monospace;
+font-family: var(--ui-font);
 font-size: 16px;
 font-weight: bold;
 color: #FFE4B5;
@@ -1023,7 +1035,7 @@ text-align: right;
 flex: 1;
 min-width: 120px;
 padding: 12px 20px;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: 14px;
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -1101,7 +1113,7 @@ box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 8px rgba(255, 228, 181, 0.4)
 }
 
 .toggle-label {
-font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+font-family: var(--ui-font);
 font-size: 16px;
 color: #FFE4B5;
 cursor: pointer;
@@ -1121,7 +1133,7 @@ justify-content: flex-end;
 
 .settings-button {
 padding: 12px 28px;
-font-family: 'Impact', 'Arial Black', sans-serif;
+font-family: var(--ui-font);
 font-size: 16px;
 letter-spacing: 1px;
 text-transform: uppercase;
@@ -1165,12 +1177,12 @@ box-shadow: 0 2px 0 #165023;
 }
 
 @media (max-width: 800px) {
-.arcade-name-overlay {
+.name-overlay {
 min-width: 0;
 width: calc(100% - 24px);
 }
 
-.arcade-name-key {
+.name-key {
 width: 24px;
 font-size: 14px;
 }
@@ -1183,41 +1195,8 @@ font-size: 14px;
 <div id="info"></div>
 <div id="turnDisplay"></div>
 <!-- Libraries -->
-<script src="js/lib/three.min.js"></script>
-<!-- Board & Spaces -->
-<script src="js/game/board/spaces.js"></script>
-<!-- Piece Models -->
-<script src="js/game/models/dice.js"></script>
-<script src="js/game/models/guy.js"></script>
-<script src="js/game/models/cloud.js"></script>
-<script src="js/game/models/mountain.js"></script>
-<script src="js/game/models/tree.js"></script>
-<script src="js/game/actors/pieces.js"></script>
-<!-- Game State -->
-<script src="js/game/actors/players.js"></script>
-<script src="js/game/actors/positioning.js"></script>
-<!-- Debug Tools -->
-<script src="js/debug/grid.js"></script>
-<script src="js/debug/grid-visual.js"></script>
-<script src="js/debug/fps-sampler.js"></script>
-<script src="js/debug/debug-stats-formatter.js"></script>
-<script src="js/debug/fps-counter.js"></script>
-<!-- Rendering -->
-<script src="js/rendering/environment.js"></script>
-<script src="js/rendering/sky.js"></script>
-<!-- Input & Controls -->
-<script src="js/input/camera.js"></script>
-<script src="js/input/local-multiplayer.js"></script>
-<!-- Game Systems -->
-<script src="js/game/animations/player-animator.js"></script>
-<script src="js/game/animations/dice-animator.js"></script>
-<script src="js/game/ui/settings/settings-manager.js"></script>
-<script src="js/game/ui/settings/settings-menu.js"></script>
-<script src="js/game/ui/credits/credits-screen.js"></script>
-<script src="js/game/game-manager.js"></script>
-<script src="js/game/ui/game-ui.js"></script>
-<script src="js/game/ui/menu/title-screen.js"></script>
-<!-- Main Game Loop -->
-<script src="js/game/main.js"></script>
+<script src="/three.min.js"></script>
+<!-- Bundled game runtime built from TypeScript -->
+<script src="/game.bundle.js"></script>
 </body>
 </html>

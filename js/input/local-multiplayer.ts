@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Single button/mouse input handler
 function createLocalMultiplayerInput() {
     var input = {
@@ -28,7 +29,7 @@ function createLocalMultiplayerInput() {
                 padding: 20px 60px;
                 font-size: 28px;
                 font-weight: bold;
-                font-family: var(--arcade-font);
+                font-family: var(--game-font);
                 background: linear-gradient(180deg, #4CAF50 0%, #45a049 100%);
                 color: white;
                 border: 4px solid #2d6b2f;

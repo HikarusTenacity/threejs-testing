@@ -41,7 +41,7 @@ function createCreditsScreen() {
         '3D Models, UI',
         'Hayden',
         'Special Thanks',
-        'Ms. Royaltey',
+        'Dr. Royaltey',
         '',
         '',
         'Thanks for playing!'
@@ -77,11 +77,10 @@ function createCreditsScreen() {
             }
 
             this.scrollTimer = setInterval(function() {
-                if (!self.isVisible) {
-                    return;
-                }
+                if (!self.isVisible) return;
 
                 self.viewport.scrollTop += 1;
+                // prevent overscrolling, loop
                 if (self.viewport.scrollTop + self.viewport.clientHeight >= self.viewport.scrollHeight) {
                     self.viewport.scrollTop = 0;
                 }
@@ -102,9 +101,7 @@ function createCreditsScreen() {
     });
 
     root.addEventListener('click', function(event) {
-        if (event.target === root) {
-            screen.hide();
-        }
+        if (event.target === root) screen.hide();
     });
 
     window.addEventListener('keydown', function(event) {

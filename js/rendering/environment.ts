@@ -1,11 +1,16 @@
 // Environment setup - ground, floor, lighting, trees, and mountains
+var environmentVisuals = {
+    trees: [],
+    mountains: []
+};
+
 function setupEnvironment(scene) {
     var groundColor = 0x4CAF50;
     var sunlightColor = 0xfff8dc;
     var skyLightColor = 0x87ceeb;
 
     // Add large green ground plane (Mario 64 style)
-    var groundGeometry = new THREE.PlaneGeometry(500, 500);
+    var groundGeometry = new THREE.PlaneGeometry(225, 225);
     var groundMaterial = new THREE.MeshPhongMaterial({color: groundColor, flatShading: true});
     var ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
@@ -26,10 +31,18 @@ function setupEnvironment(scene) {
     scene.add(floor);
 
     // Add trees around the board in a clearing
-    createTreeRing(scene);
+    environmentVisuals.trees = createTreeRing(scene) || [];
+    for (var treeIndex = 0; treeIndex < environmentVisuals.trees.length; treeIndex++) {
+        var tree = environmentVisuals.trees[treeIndex];
+        tree.userData.baseRotationX = tree.rotation.x;
+        tree.userData.baseRotationZ = tree.rotation.z;
+        tree.userData.swayPhase = Math.random() * Math.PI * 2;
+        tree.userData.swayAmplitude = 0.012 + Math.random() * 0.012;
+        tree.userData.swaySpeed = 0.75 + Math.random() * 0.45;
+    }
 
     // Add distant mountains
-    createMountains(scene);
+    environmentVisuals.mountains = createMountains(scene) || [];
 
     // Mario 64 style lighting with sun
     var directionalLight = new THREE.DirectionalLight(sunlightColor, 1.2);
@@ -52,4 +65,37 @@ function setupEnvironment(scene) {
     scene.add(hemisphereLight);
 
     return directionalLight;
+}
+
+function setEnvironmentQuality(quality) {
+    var showTrees = quality === 'high';
+    var showMountains = quality !== 'low';
+
+    for (var i = 0; i < environmentVisuals.trees.length; i++) {
+        environmentVisuals.trees[i].visible = showTrees;
+    }
+
+    for (var mountainIndex = 0; mountainIndex < environmentVisuals.mountains.length; mountainIndex++) {
+        environmentVisuals.mountains[mountainIndex].visible = showMountains;
+    }
+}
+
+function updateEnvironmentAnimations(nowMs) {
+    var t = nowMs * 0.001;
+
+    for (var i = 0; i < environmentVisuals.trees.length; i++) {
+        var tree = environmentVisuals.trees[i];
+        if (!tree.visible) {
+            continue;
+        }
+
+        var phase = tree.userData.swayPhase || 0;
+        var amp = tree.userData.swayAmplitude || 0.015;
+        var speed = tree.userData.swaySpeed || 0.9;
+        var baseX = tree.userData.baseRotationX || 0;
+        var baseZ = tree.userData.baseRotationZ || 0;
+
+        tree.rotation.x = baseX + Math.sin(t * speed + phase) * amp;
+        tree.rotation.z = baseZ + Math.cos(t * (speed * 0.85) + phase) * amp * 0.75;
+    }
 }

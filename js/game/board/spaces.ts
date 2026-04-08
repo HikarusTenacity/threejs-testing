@@ -141,7 +141,7 @@ function initializeBoardSpaces() {
         var bounds = SPACE_BOUNDS[id];
         if (!bounds) continue;
 
-        var definition = SPACE_DEFINITION_BY_ID[id] || { id: id, type: SPACE_TYPES.SPECIAL, name: null };
+        var definition = SPACE_DEFINITION_BY_ID[id] || { id: id, type: SPACE_TYPES.GENERAL_COMMITTEE, name: null };
         
         var centerX = (bounds.xMin + bounds.xMax) / 2;
         var centerZ = (bounds.zMin + bounds.zMax) / 2;

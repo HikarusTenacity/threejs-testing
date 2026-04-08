@@ -30,21 +30,26 @@ function createTree(x, z, scale) {
 }
 
 function createTreeRing(scene) {
-    // Create trees in a ring around the board
-    // Board is 20x20, so place trees starting at radius ~18 (leaving camera room)
     var minRadius = 18;
-    var maxRadius = 35;
-    var numTrees = 80;
+    var maxRadius = 60;
+    var numTrees = 150;
+    var trees = [];
     
     for (var i = 0; i < numTrees; i++) {
         var angle = (i / numTrees) * Math.PI * 2;
         var radius = minRadius + Math.random() * (maxRadius - minRadius);
         
+        //pos
         var x = Math.cos(angle) * radius;
         var z = Math.sin(angle) * radius;
         
-        var scale = 0.8 + Math.random() * 0.6;
+        // increase size based on dist from center
+        var distFromCenter = (radius - minRadius) / (maxRadius - minRadius);
+        var scale = 1 + (Math.pow(2,distFromCenter * distFromCenter)) + Math.random() * 0.25;
         var tree = createTree(x, z, scale);
         scene.add(tree);
+        trees.push(tree);
     }
+
+    return trees;
 }

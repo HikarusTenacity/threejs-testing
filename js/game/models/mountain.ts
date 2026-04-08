@@ -37,6 +37,7 @@ function createMountain(x, z, width, height, depth) {
 function createMountains(scene) {
     // Create mountain range in the far distance
     var mountainDistance = 80;
+    var mountains = [];
     
     // North mountains
     for (var i = 0; i < 5; i++) {
@@ -46,6 +47,7 @@ function createMountains(scene) {
         var height = 25 + Math.random() * 15;
         var mountain = createMountain(x, z, width, height, width);
         scene.add(mountain);
+        mountains.push(mountain);
     }
     
     // South mountains
@@ -56,6 +58,7 @@ function createMountains(scene) {
         var height = 25 + Math.random() * 15;
         var mountain = createMountain(x, z, width, height, width);
         scene.add(mountain);
+        mountains.push(mountain);
     }
     
     // East mountains
@@ -66,6 +69,7 @@ function createMountains(scene) {
         var height = 25 + Math.random() * 15;
         var mountain = createMountain(x, z, width, height, width);
         scene.add(mountain);
+        mountains.push(mountain);
     }
     
     // West mountains
@@ -76,5 +80,8 @@ function createMountains(scene) {
         var height = 25 + Math.random() * 15;
         var mountain = createMountain(x, z, width, height, width);
         scene.add(mountain);
+        mountains.push(mountain);
     }
+
+    return mountains;
 }

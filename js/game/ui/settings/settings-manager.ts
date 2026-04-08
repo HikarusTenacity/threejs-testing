@@ -8,8 +8,7 @@ function createSettingsManager() {
         sfxVolume: 0.8,
         graphicsQuality: 'high',  // 'low', 'medium', 'high'
         gameSpeed: 1.0,            // 0.5x to 2.0x
-        shadowsEnabled: true,
-        effectsEnabled: true
+        retroMode: false
     };
     
     var manager = {
@@ -25,10 +24,10 @@ function createSettingsManager() {
             if (stored) {
                 try {
                     this.settings = JSON.parse(stored);
-                    // Merge with defaults to ensure all keys exist
+                    // make sure all keys are present even if more are added
                     this.settings = Object.assign({}, defaultSettings, this.settings);
                 } catch (e) {
-                    console.warn('Failed to parse settings, using defaults', e);
+                    console.warn('cant parse settings, defaulting :/', e);
                     this.settings = Object.assign({}, defaultSettings);
                 }
             } else {
@@ -41,7 +40,7 @@ function createSettingsManager() {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
                 this.notifyListeners();
             } catch (e) {
-                console.error('Failed to save settings', e);
+                console.error('couldnt save settings :(', e);
             }
         },
         
@@ -122,21 +121,12 @@ function createSettingsManager() {
             this.saveSettings();
         },
         
-        areShadowsEnabled: function() {
-            return this.settings.shadowsEnabled;
+        isRetroModeEnabled: function() {
+            return !!this.settings.retroMode;
         },
-        
-        setShadowsEnabled: function(enabled) {
-            this.settings.shadowsEnabled = !!enabled;
-            this.saveSettings();
-        },
-        
-        areEffectsEnabled: function() {
-            return this.settings.effectsEnabled;
-        },
-        
-        setEffectsEnabled: function(enabled) {
-            this.settings.effectsEnabled = !!enabled;
+
+        setRetroMode: function(enabled) {
+            this.settings.retroMode = !!enabled;
             this.saveSettings();
         }
     };
