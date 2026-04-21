@@ -1,21 +1,18 @@
-function createFpsSampler(sampleWindowMs) {
-    var windowMs = typeof sampleWindowMs === 'number' ? sampleWindowMs : 1000;
-    var lastFrameTime = performance.now();
-    var lastSample = lastFrameTime;
-    var frameCount = 0;
-    var fps = 0;
-    var frameMs = 0;
-    var maxFrameMs = 0;
+function createFpsSampler(sampleWindowMs: number) {
+    const windowMs = typeof sampleWindowMs === 'number' ? sampleWindowMs : 1000;
+    let lastFrameTime = performance.now();
+    let lastSample = lastFrameTime;
+    let frameCount = 0, fps = 0, frameMs = 0, maxFrameMs = 0;
 
     return {
-        tick: function(now) {
-            frameCount += 1;
+        tick: function(now: number) {
+            frameCount++;
 
             frameMs = now - lastFrameTime;
             lastFrameTime = now;
             if (frameMs > maxFrameMs) maxFrameMs = frameMs;
 
-            var elapsed = now - lastSample;
+            const elapsed = now - lastSample;
             if (elapsed < windowMs) return null;
 
             fps = Math.floor((frameCount * 1000) / elapsed);
