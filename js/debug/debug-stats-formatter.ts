@@ -2,7 +2,9 @@ function formatDebugStats(sample, debugInfo) {
     var lines = [];
 
     lines.push('FPS: ' + sample.fps);
-    lines.push('FT: ' + sample.frameMs.toFixed(1) + 'ms / ' + sample.maxFrameMs.toFixed(1) + 'ms');
+    lines.push(`FT: ${sample.frameMs.toFixed(1)}ms / 
+                    ${sample.maxFrameMs.toFixed(1)}ms`
+                ); //frame time / max ft
 
     // renderer info
     if (debugInfo?.renderer?.info) {
