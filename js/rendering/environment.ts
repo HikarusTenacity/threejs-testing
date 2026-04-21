@@ -9,7 +9,6 @@ function setupEnvironment(scene) {
     var sunlightColor = 0xfff8dc;
     var skyLightColor = 0x87ceeb;
 
-    // Add large green ground plane (Mario 64 style)
     var groundGeometry = new THREE.PlaneGeometry(225, 225);
     var groundMaterial = new THREE.MeshPhongMaterial({color: groundColor, flatShading: true});
     var ground = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -44,7 +43,6 @@ function setupEnvironment(scene) {
     // Add distant mountains
     environmentVisuals.mountains = createMountains(scene) || [];
 
-    // Mario 64 style lighting with sun
     var directionalLight = new THREE.DirectionalLight(sunlightColor, 1.2);
     directionalLight.position.set(30, 40, 30);
     directionalLight.castShadow = true;
@@ -71,31 +69,24 @@ function setEnvironmentQuality(quality) {
     var showTrees = quality === 'high';
     var showMountains = quality !== 'low';
 
-    for (var i = 0; i < environmentVisuals.trees.length; i++) {
-        environmentVisuals.trees[i].visible = showTrees;
-    }
-
-    for (var mountainIndex = 0; mountainIndex < environmentVisuals.mountains.length; mountainIndex++) {
-        environmentVisuals.mountains[mountainIndex].visible = showMountains;
-    }
+    for (var tree of environmentVisuals.trees) tree.visible = showTrees;
+    for (var mountain of environmentVisuals.mountains) mountain.visible = showMountains;
 }
 
 function updateEnvironmentAnimations(nowMs) {
-    var t = nowMs * 0.001;
+    var animTime = nowMs * 0.001;
+    var trees = environmentVisuals.trees;
 
-    for (var i = 0; i < environmentVisuals.trees.length; i++) {
-        var tree = environmentVisuals.trees[i];
-        if (!tree.visible) {
-            continue;
-        }
+    if (!trees.length || !trees[0].visible) return;
 
+    for (var tree of trees) {
         var phase = tree.userData.swayPhase || 0;
         var amp = tree.userData.swayAmplitude || 0.015;
         var speed = tree.userData.swaySpeed || 0.9;
         var baseX = tree.userData.baseRotationX || 0;
         var baseZ = tree.userData.baseRotationZ || 0;
 
-        tree.rotation.x = baseX + Math.sin(t * speed + phase) * amp;
-        tree.rotation.z = baseZ + Math.cos(t * (speed * 0.85) + phase) * amp * 0.75;
+        tree.rotation.x = baseX + Math.sin(animTime * speed + phase) * amp;
+        tree.rotation.z = baseZ + Math.cos(animTime * (speed * 0.85) + phase) * amp * 0.75;
     }
 }
