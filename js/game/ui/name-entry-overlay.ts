@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Name entry overlay - handles style name entry UI
 var nameEntryOverlay = {
     root: null,

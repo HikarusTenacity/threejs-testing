@@ -1,38 +1,36 @@
-// Environment setup - ground, floor, lighting, trees, and mountains
+/// <reference path="../../types/globals.d.ts" />
+
 var environmentVisuals = {
     trees: [],
     mountains: []
 };
 
-function setupEnvironment(scene) {
-    var groundColor = 0x4CAF50;
-    var sunlightColor = 0xfff8dc;
-    var skyLightColor = 0x87ceeb;
+function setupEnvironment(scene: THREE.Scene) {
+    const groundColor = 0x4CAF50;
+    const sunlightColor = 0xfff8dc;
+    const skyLightColor = 0x87ceeb;
 
-    var groundGeometry = new THREE.PlaneGeometry(225, 225);
-    var groundMaterial = new THREE.MeshPhongMaterial({color: groundColor, flatShading: true});
-    var ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    const groundGeometry = new THREE.PlaneGeometry(225, 225);
+    const groundMaterial = new THREE.MeshPhongMaterial({color: groundColor, flatShading: true});
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -1.01;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Add floor with texture on top of green ground (the board)
-    var textureLoader = new THREE.TextureLoader();
-    var floorTexture = textureLoader.load('assets/board.png');
+    const textureLoader = new THREE.TextureLoader();
+    const floorTexture = textureLoader.load('assets/board.png');
 
-    var floorGeometry = new THREE.PlaneGeometry(20, 20);
-    var floorMaterial = new THREE.MeshPhongMaterial({map: floorTexture});
-    var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    const floorGeometry = new THREE.PlaneGeometry(20, 20);
+    const floorMaterial = new THREE.MeshPhongMaterial({map: floorTexture});
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -1;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Add trees around the board in a clearing
     environmentVisuals.trees = createTreeRing(scene) || [];
-    for (var treeIndex = 0; treeIndex < environmentVisuals.trees.length; treeIndex++) {
-        var tree = environmentVisuals.trees[treeIndex];
+    for (const tree of environmentVisuals.trees) {
         tree.userData.baseRotationX = tree.rotation.x;
         tree.userData.baseRotationZ = tree.rotation.z;
         tree.userData.swayPhase = Math.random() * Math.PI * 2;
@@ -40,10 +38,9 @@ function setupEnvironment(scene) {
         tree.userData.swaySpeed = 0.75 + Math.random() * 0.45;
     }
 
-    // Add distant mountains
     environmentVisuals.mountains = createMountains(scene) || [];
 
-    var directionalLight = new THREE.DirectionalLight(sunlightColor, 1.2);
+    const directionalLight = new THREE.DirectionalLight(sunlightColor, 1.2);
     directionalLight.position.set(30, 40, 30);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -56,35 +53,35 @@ function setupEnvironment(scene) {
     directionalLight.shadow.camera.bottom = -30;
     scene.add(directionalLight);
 
-    var ambientLight = new THREE.AmbientLight(skyLightColor, 0.6);
+    const ambientLight = new THREE.AmbientLight(skyLightColor, 0.6);
     scene.add(ambientLight);
 
-    var hemisphereLight = new THREE.HemisphereLight(skyLightColor, groundColor, 0.5);
+    const hemisphereLight = new THREE.HemisphereLight(skyLightColor, groundColor, 0.5);
     scene.add(hemisphereLight);
 
     return directionalLight;
 }
 
-function setEnvironmentQuality(quality) {
-    var showTrees = quality === 'high';
-    var showMountains = quality !== 'low';
+function setEnvironmentQuality(quality: string) {
+    const showTrees = quality === 'high';
+    const showMountains = quality !== 'low';
 
-    for (var tree of environmentVisuals.trees) tree.visible = showTrees;
-    for (var mountain of environmentVisuals.mountains) mountain.visible = showMountains;
+    for (const tree of environmentVisuals.trees) tree.visible = showTrees;
+    for (const mountain of environmentVisuals.mountains) mountain.visible = showMountains;
 }
 
-function updateEnvironmentAnimations(nowMs) {
-    var animTime = nowMs * 0.001;
-    var trees = environmentVisuals.trees;
+function updateEnvironmentAnimations(nowMs: number) {
+    const animTime = nowMs * 0.001;
+    const trees = environmentVisuals.trees;
 
     if (!trees.length || !trees[0].visible) return;
 
-    for (var tree of trees) {
-        var phase = tree.userData.swayPhase || 0;
-        var amp = tree.userData.swayAmplitude || 0.015;
-        var speed = tree.userData.swaySpeed || 0.9;
-        var baseX = tree.userData.baseRotationX || 0;
-        var baseZ = tree.userData.baseRotationZ || 0;
+    for (const tree of trees) {
+        const phase = tree.userData.swayPhase || 0;
+        const amp = tree.userData.swayAmplitude || 0.015;
+        const speed = tree.userData.swaySpeed || 0.9;
+        const baseX = tree.userData.baseRotationX || 0;
+        const baseZ = tree.userData.baseRotationZ || 0;
 
         tree.rotation.x = baseX + Math.sin(animTime * speed + phase) * amp;
         tree.rotation.z = baseZ + Math.cos(animTime * (speed * 0.85) + phase) * amp * 0.75;

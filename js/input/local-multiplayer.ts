@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Single button/mouse input handler
 function createLocalMultiplayerInput() {
     var input = {

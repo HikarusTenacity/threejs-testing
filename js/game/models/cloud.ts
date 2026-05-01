@@ -57,7 +57,7 @@ function updateCloudPosition(cloud: any) {
         } else if (cloud.position.x > bounds.xMax) {
             cloud.position.x = bounds.xMin;
         }
-        
+
         if (cloud.position.z < bounds.zMin) {
             cloud.position.z = bounds.zMax;
         } else if (cloud.position.z > bounds.zMax) {

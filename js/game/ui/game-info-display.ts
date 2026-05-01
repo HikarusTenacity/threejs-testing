@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Game info display - main turn and player status information
 declare var PLAYERS: any[];
 

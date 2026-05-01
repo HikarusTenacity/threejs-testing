@@ -1,4 +1,29 @@
-function escapeDebugHtml(value: any) {
+type DebugSample = {
+    fps: number;
+    frameMs: number;
+    maxFrameMs: number;
+};
+
+type DebugInfo = {
+    renderer?: {
+        info?: {
+            render: {
+                calls: number;
+                triangles: number;
+            };
+            memory: {
+                geometries: number;
+                textures: number;
+            };
+        };
+    };
+    gameManager?: {
+        getCurrentPlayer?: () => { name: string; color?: number | string } | null;
+        gameState: string;
+    };
+};
+
+function escapeDebugHtml(value: unknown) {
     return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -7,56 +32,59 @@ function escapeDebugHtml(value: any) {
         .replace(/'/g, '&#39;');
 }
 
-function debugValueSpan(value: any, color: string) {
+function debugValueSpan(value: unknown, color: string) {
     return '<span style="color: ' + color + ';">' + escapeDebugHtml(value) + '</span>';
 }
-
-var DEBUG_STATS_THEMES = {
+    
+const DEBUG_STATS_THEMES = {
     neon: {
-        fps: '#78dce8',
-        frameTime: '#ffd166',
-        maxFrameTime: '#ef476f',
-        drawCalls: '#a6e22e',
-        triangles: '#fd971f',
-        geometries: '#c792ea',
-        textures: '#f07178',
-        gameState: '#82aaff',
-        playerFallback: '#82aaff'
+        fps: '#00E5FF',
+        frameTime: '#39FF14',
+        maxFrameTime: '#FF006E',
+        drawCalls: '#FCEE0A',
+        triangles: '#FF9F1C',
+        geometries: '#8A2BE2',
+        textures: '#FF4F81',
+        gameState: '#00B0FF',
+        playerFallback: '#B388FF'
     },
     terminal: {
-        fps: '#00ff9c',
-        frameTime: '#d4ff00',
-        maxFrameTime: '#ff5c8a',
-        drawCalls: '#7cff6b',
-        triangles: '#ffc857',
-        geometries: '#b28cff',
-        textures: '#ff8f6b',
-        gameState: '#8fc3ff',
-        playerFallback: '#8fc3ff'
+        fps: '#4AF626',
+        frameTime: '#4AF626',
+        maxFrameTime: '#4AF626',
+        drawCalls: '#4AF626',
+        triangles: '#4AF626',
+        geometries: '#4AF626',
+        textures: '#4AF626',
+        gameState: '#4AF626',
+        playerFallback: '#4AF626'
     },
     sunset: {
-        fps: '#7ad7ff',
-        frameTime: '#ffd07a',
-        maxFrameTime: '#ff7aa2',
-        drawCalls: '#96e072',
-        triangles: '#ffb06a',
-        geometries: '#d8a8ff',
-        textures: '#ff8f8f',
-        gameState: '#98b8ff',
-        playerFallback: '#98b8ff'
+        fps: '#FFB347',
+        frameTime: '#FF8C42',
+        maxFrameTime: '#E63946',
+        drawCalls: '#F4A261',
+        triangles: '#FFD166',
+        geometries: '#6D597A',
+        textures: '#B56576',
+        gameState: '#355070',
+        playerFallback: '#6D597A'
     }
 };
 
-var activeDebugStatsTheme: any = Object.assign({}, DEBUG_STATS_THEMES.neon);
+type ThemeKey = keyof typeof DEBUG_STATS_THEMES;
+type DebugTheme = typeof DEBUG_STATS_THEMES[keyof typeof DEBUG_STATS_THEMES];
 
-function setDebugStatsTheme(theme: any) {
-    if (typeof theme === 'string' && DEBUG_STATS_THEMES[theme]) {
-        activeDebugStatsTheme = Object.assign({}, DEBUG_STATS_THEMES[theme]);
+let activeDebugStatsTheme: DebugTheme = { ...DEBUG_STATS_THEMES.neon };
+
+function setDebugStatsTheme(theme: ThemeKey | Partial<DebugTheme>) {
+    if (typeof theme === 'string') {
+        activeDebugStatsTheme = { ...DEBUG_STATS_THEMES[theme] };
         return true;
     }
 
-    if (theme && typeof theme === 'object') {
-        activeDebugStatsTheme = Object.assign({}, activeDebugStatsTheme, theme);
+    if (theme && typeof theme === 'object' && !Array.isArray(theme)) {
+        activeDebugStatsTheme = { ...activeDebugStatsTheme, ...theme };
         return true;
     }
 
@@ -67,12 +95,13 @@ function getDebugStatsThemeNames() {
     return Object.keys(DEBUG_STATS_THEMES);
 }
 
-function getDebugPlayerColor(player: any) {
+function getDebugPlayerColor(
+    player?: { name: string, color?: number | string }
+) {
     if (!player) return activeDebugStatsTheme.playerFallback;
 
     if (typeof player.color === 'number') {
-        let hex = player.color.toString(16);
-        while (hex.length < 6) hex = '0' + hex;
+        const hex = player.color.toString(16).padStart(6, '0');
         return '#' + hex;
     }
 
@@ -87,36 +116,9 @@ function getDebugPlayerColor(player: any) {
     return activeDebugStatsTheme.playerFallback;
 }
 
-function formatDebugStats(sample: any, debugInfo: any) {
-    let lines = [];
-
-    lines.push(`FPS: ${sample.fps}`);
-    lines.push(`FT: ${sample.frameMs.toFixed(1)}ms /
-                    ${sample.maxFrameMs.toFixed(1)}ms`);
-
-    if (debugInfo?.renderer?.info) {
-        let renderInfo = debugInfo.renderer.info.render;
-        let memInfo = debugInfo.renderer.info.memory;
-        lines.push(`DC: ${renderInfo.calls}         //draw calls
-                    TRI: ${renderInfo.triangles}`); //triangles
-        lines.push(`GEO: ${memInfo.geometries}      //geometries
-                    TEX: ${memInfo.textures}`);     //textures
-    }
-
-    if (debugInfo?.gameManager) {
-        let gm = debugInfo.gameManager;
-        let currentPlayer = gm?.getCurrentPlayer?.();
-        let playerName = currentPlayer?.name ?? 'N/A';
-        lines.push('GAMESTATE: ' + gm.gameState);
-        lines.push('PLAYER: ' + playerName);
-    }
-
-    return lines.join('\n');
-}
-
-function formatDebugStatsColored(sample: any, debugInfo: any) {
-    var lines = [];
-    var theme = activeDebugStatsTheme;
+function formatDebugStatsColored(sample: DebugSample, debugInfo: DebugInfo) {
+    let lines: string[] = [];
+    const theme = activeDebugStatsTheme;
 
     lines.push(`FPS: ${debugValueSpan(sample.fps, theme.fps)}`);
     lines.push(`FT: ${debugValueSpan(sample.frameMs.toFixed(1) + 'ms', theme.frameTime)} / ${debugValueSpan(sample.maxFrameMs.toFixed(1) + 'ms', theme.maxFrameTime)}`);
@@ -130,7 +132,7 @@ function formatDebugStatsColored(sample: any, debugInfo: any) {
     }
 
     if (debugInfo?.gameManager) {
-        const gm = debugInfo.gameManager;
+        const gm = debugInfo?.gameManager;
         const currentPlayer = gm?.getCurrentPlayer?.();
         const playerName = currentPlayer?.name ?? 'N/A';
         const playerColor = getDebugPlayerColor(currentPlayer);

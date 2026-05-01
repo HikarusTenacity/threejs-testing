@@ -1,6 +1,13 @@
-// @ts-nocheck
 // Settings Menu UI
 function createSettingsMenu(settingsManager) {
+    type SettingSection = HTMLDivElement & {
+        volumeSlider?: HTMLInputElement;
+        volumeValue?: HTMLSpanElement;
+        graphicsButtons?: HTMLButtonElement[];
+        speedSlider?: HTMLInputElement;
+        speedValue?: HTMLSpanElement;
+        retroModeToggle?: any;
+    };
     var root = document.createElement('div');
     root.className = 'settings-overlay';
     root.classList.add('hidden');
@@ -29,7 +36,7 @@ function createSettingsMenu(settingsManager) {
     content.className = 'settings-content';
 
     // Volume Control
-    var volumeSection = createSettingSection('Master Volume', 'volume');
+    var volumeSection = createSettingSection('Master Volume', 'volume') as SettingSection;
     volumeSection.volumeSlider = createVolumeSlider('volume', settingsManager.getVolume() * 100);
     volumeSection.volumeValue = createValueLabel(Math.round(settingsManager.getVolume() * 100) + '%');
     volumeSection.appendChild(volumeSection.volumeSlider);
@@ -37,7 +44,7 @@ function createSettingsMenu(settingsManager) {
     content.appendChild(volumeSection);
 
     // Graphics Quality
-    var graphicsSection = createSettingSection('Graphics Quality');
+    var graphicsSection = createSettingSection('Graphics Quality', 'graphics-quality') as SettingSection;
     var currentQuality = settingsManager.getGraphicsQuality();
     var graphicsOptions = ['Low', 'Medium', 'High'];
     var qualityValues = ['low', 'medium', 'high'];
@@ -55,7 +62,7 @@ function createSettingsMenu(settingsManager) {
     content.appendChild(graphicsSection);
 
     // Game Speed Control
-    var gameSpeedSection = createSettingSection('Game Speed');
+    var gameSpeedSection = createSettingSection('Game Speed', 'game-speed') as SettingSection;
     gameSpeedSection.speedSlider = createGameSpeedSlider('game-speed', settingsManager.getGameSpeed());
     gameSpeedSection.speedValue = createValueLabel((settingsManager.getGameSpeed() * 100).toFixed(0) + '%');
     gameSpeedSection.appendChild(gameSpeedSection.speedSlider);
@@ -63,7 +70,7 @@ function createSettingsMenu(settingsManager) {
     content.appendChild(gameSpeedSection);
 
     // Retro Mode Toggle
-    var retroModeSection = createSettingSection('Retro Mode');
+    var retroModeSection = createSettingSection('Retro Mode', 'retro-mode') as SettingSection;
     retroModeSection.retroModeToggle = createToggleButton('Retro Mode', settingsManager.isRetroModeEnabled());
     retroModeSection.appendChild(retroModeSection.retroModeToggle);
     content.appendChild(retroModeSection);
@@ -137,7 +144,7 @@ function createSettingsMenu(settingsManager) {
                 if (confirm('Reset all settings to defaults?')) {
                     callback();
                     // Update UI after reset
-                    volumeSection.volumeSlider.value = settingsManager.getVolume() * 100;
+                    volumeSection.volumeSlider.value = String(settingsManager.getVolume() * 100);
                     volumeSection.volumeValue.textContent = Math.round(settingsManager.getVolume() * 100) + '%';
                     
                     gameSpeedSection.speedSlider.value = settingsManager.getGameSpeed();
@@ -160,7 +167,7 @@ function createSettingsMenu(settingsManager) {
             if (typeof callback !== 'function') {
                 return;
             }
-            volumeSection.volumeSlider.addEventListener('input', function(e) {
+            volumeSection.volumeSlider.addEventListener('input', function(e: any) {
                 var value = parseFloat(e.target.value) / 100;
                 volumeSection.volumeValue.textContent = e.target.value + '%';
                 callback(value);
@@ -186,7 +193,7 @@ function createSettingsMenu(settingsManager) {
             if (typeof callback !== 'function') {
                 return;
             }
-            gameSpeedSection.speedSlider.addEventListener('input', function(e) {
+            gameSpeedSection.speedSlider.addEventListener('input', function(e: any) {
                 var value = parseFloat(e.target.value);
                 gameSpeedSection.speedValue.textContent = (value * 100).toFixed(0) + '%';
                 callback(value);
@@ -197,7 +204,7 @@ function createSettingsMenu(settingsManager) {
             if (typeof callback !== 'function') {
                 return;
             }
-            retroModeSection.retroModeToggle.addEventListener('change', function(e) {
+            retroModeSection.retroModeToggle.addEventListener('change', function(e: any) {
                 callback(e.target.checked);
             });
         }
@@ -205,7 +212,7 @@ function createSettingsMenu(settingsManager) {
 }
 
 // Helper function to create a settings section
-function createSettingSection(labelText, dataValue) {
+function createSettingSection(labelText: string, dataValue?: string) {
     var section = document.createElement('div');
     section.className = 'settings-section';
     if (dataValue) {
@@ -222,13 +229,12 @@ function createSettingSection(labelText, dataValue) {
     section.appendChild(controlsDiv);
 
     // Override appendChild to add to controlsDiv instead
-    var originalAppend = section.appendChild;
-    section.appendChild = function(element) {
+    var originalAppend = section.appendChild.bind(section);
+    (section as any).appendChild = function(element: Node) {
         if (element === controlsDiv || element === label) {
-            originalAppend.call(this, element);
-        } else {
-            controlsDiv.appendChild(element);
+            return originalAppend(element);
         }
+        return controlsDiv.appendChild(element);
     };
 
     return section;
@@ -291,7 +297,7 @@ function createOptionButton(label, isSelected) {
 }
 
 // Helper function to create toggle button
-function createToggleButton(label, initialState) {
+function createToggleButton(label: string, initialState: boolean) {
     var container = document.createElement('div');
     container.className = 'toggle-container';
 
@@ -310,17 +316,17 @@ function createToggleButton(label, initialState) {
     container.appendChild(label_el);
 
     // Add method to update toggle state
-    container.updateToggle = function(state) {
+    (container as any).updateToggle = function(state: boolean) {
         toggle.checked = state;
     };
 
     // Make container act as event target for change events
-    container.addEventListener = function(event, handler) {
+    (container as any).addEventListener = function(event: string, handler: EventListener) {
         if (event === 'change') {
             toggle.addEventListener(event, handler);
-        } else {
-            HTMLElement.prototype.addEventListener.call(this, event, handler);
+            return;
         }
+        HTMLElement.prototype.addEventListener.call(this, event, handler);
     };
 
     return container;

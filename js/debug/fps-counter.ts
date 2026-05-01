@@ -34,7 +34,7 @@ function createFpsCounter() {
             if (typeof formatDebugStatsColored === 'function') {
                 el.innerHTML = formatDebugStatsColored(sample, debugInfo);
             } else {
-                el.textContent = formatDebugStats(sample, debugInfo);
+                el.textContent = 'FPS: ' + sample.fps + '\nFT: ' + sample.frameMs.toFixed(1) + 'ms';
             }
         }
     };

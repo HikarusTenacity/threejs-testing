@@ -1,7 +1,25 @@
-// monopoly board
-var BOARD_SPACES = [];
-var SPACE_BOUNDS = {};
-var SPACE_TYPES = {
+type SpaceType = keyof typeof SPACE_TYPES;
+
+type Bounds = {
+    xMin: number;
+    xMax: number;
+    zMin: number;
+    zMax: number;
+};
+
+type BoardSpace = {
+    id: number;
+    name: string | null;
+    type: SpaceType;
+    bounds: Bounds;
+    center: { x: number; z: number };
+    dimensions: { width: number; depth: number };
+};
+
+let BOARD_SPACES = [];
+let SPACE_BOUNDS: { [key: number]: Bounds } = {};
+
+const SPACE_TYPES = {
     GO: 'GO',
     TAX: 'TAX',
     REROLL: 'REROLL',
@@ -19,7 +37,7 @@ var SPACE_TYPES = {
     GO_TO_JAIL: 'GO_TO_JAIL',
 };
 
-var SPACE_DEFINITIONS = [
+const SPACE_DEFINITIONS = [
     { id: 0, type: SPACE_TYPES.GO, name: 'Appropriations Committee' }, //bottom right
     { id: 1, type: SPACE_TYPES.TAX, name: 'Tax Bracket' },
     { id: 2, type: SPACE_TYPES.REROLL, name: 'Reroll Time' },
@@ -62,155 +80,14 @@ var SPACE_DEFINITIONS = [
     { id: 39, type: SPACE_TYPES.AEA_COMMITTEE, name: 'Senate Committee on Commerce, Science, and Transportation: Coast Guard, Maritime, and Fisheries' }
 ];
 
-var SPACE_DEFINITION_BY_ID = {};
-for (var definitionIndex = 0; definitionIndex < SPACE_DEFINITIONS.length; definitionIndex++) {
+let SPACE_DEFINITION_BY_ID = {};
+for (let definitionIndex = 0; definitionIndex < SPACE_DEFINITIONS.length; definitionIndex++) {
     SPACE_DEFINITION_BY_ID[SPACE_DEFINITIONS[definitionIndex].id] = SPACE_DEFINITIONS[definitionIndex];
 }
 
 // dimensions
-var CORNER_MULT = 1.6;
-var PROPERTY_WIDTH = 1;
-var SCALE = 20 / (2 * CORNER_MULT + 9 * PROPERTY_WIDTH);
-var CORNER = CORNER_MULT * SCALE;
-var PROPERTY = PROPERTY_WIDTH * SCALE;
-
-// Define space bounds in world coordinates
-function defineSpaceLayout() {
-    // Create a space with given bounds
-    function addSpace(id, xMin, xMax, zMin, zMax) {
-        SPACE_BOUNDS[id] = { 
-            xMin: xMin, 
-            xMax: xMax, 
-            zMin: zMin, 
-            zMax: zMax };
-    }
-    
-    // Start at top-right corner (space 0), then go counterclockwise
-    var zTop = 10 - CORNER;
-    var xRight = 10 - CORNER;
-    var xLeft = -10 + CORNER;
-    var zBottom = -10 + CORNER;
-
-    //topright 0
-    addSpace(0, xRight, 10, zTop, 10);  
-
-    //top 1-9
-    var x = xRight;
-    for (var i = 1; i <= 9; i++) {
-        addSpace(i, x - PROPERTY, x, zTop, 10);
-        x -= PROPERTY;
-    }
-
-    //topleft 10
-    addSpace(10, -10, -10 + CORNER, zTop, 10);
-
-    //left 11-19
-    var z = 10 - CORNER;
-    for (var i = 11; i <= 19; i++) {
-        addSpace(i, -10, xLeft, z - PROPERTY, z);
-        z -= PROPERTY;
-    }
-
-    //bottomleft 20
-    addSpace(20, -10, xLeft, -10, zBottom);
-
-    //bottom 21-29
-    x = -10 + CORNER;
-    for (var i = 21; i <= 29; i++) {
-        addSpace(i, x, x + PROPERTY, -10, zBottom);
-        x += PROPERTY;
-    }
-
-    //bottomright 30
-    addSpace(30, xRight, 10, -10, zBottom);
-
-    //right 31-39
-    z = -10 + CORNER;
-    for (var i = 31; i <= 39; i++) {
-        addSpace(i, xRight, 10, z, z + PROPERTY);
-        z += PROPERTY;
-    }
-}
-
-// Initialize all 40 spaces
-function initializeBoardSpaces() {
-    defineSpaceLayout();
-    BOARD_SPACES = [];
-    
-    for (var id = 0; id < 40; id++) {
-        var bounds = SPACE_BOUNDS[id];
-        if (!bounds) continue;
-
-        var definition = SPACE_DEFINITION_BY_ID[id] || { id: id, type: SPACE_TYPES.GENERAL_COMMITTEE, name: null };
-        
-        var centerX = (bounds.xMin + bounds.xMax) / 2;
-        var centerZ = (bounds.zMin + bounds.zMax) / 2;
-        var width = bounds.xMax - bounds.xMin;
-        var depth = bounds.zMax - bounds.zMin;
-        
-        BOARD_SPACES.push({
-            id: id,
-            name: definition.name,
-            type: definition.type,
-            bounds: bounds,
-            center: {x: centerX, z: centerZ},
-            dimensions: {width: width, depth: depth}
-        });
-    }
-}
-
-// Get space by ID (0-39)
-function getSpaceById(spaceId) {
-    if (spaceId >= 0 && spaceId < BOARD_SPACES.length) {
-        return BOARD_SPACES[spaceId];
-    }
-    return null;
-}
-
-// Get space ID from world coordinates
-function getSpaceIdFromCoordinates(worldX, worldZ) {
-    for (var id = 0; id < 40; id++) {
-        var bounds = SPACE_BOUNDS[id];
-        if (worldX >= bounds.xMin && worldX < bounds.xMax &&
-            worldZ >= bounds.zMin && worldZ < bounds.zMax) {
-            return id;
-        }
-    }
-    return null;
-}
-
-// Get space bounds by ID
-function getSpaceBounds(spaceId) {
-    return spaceId >= 0 && spaceId < 40 ? SPACE_BOUNDS[spaceId] : null;
-}
-
-// Get/set space names
-function getSpaceName(spaceId) {
-    var space = getSpaceById(spaceId);
-    return space ? space.name : null;
-}
-
-function getSpaceType(spaceId) {
-    var space = getSpaceById(spaceId);
-    return space ? space.type : null;
-}
-
-function setSpaceName(spaceId, name) {
-    var space = getSpaceById(spaceId);
-    if (space) space.name = name;
-}
-
-function getSpacesByType(type) {
-    var matching = [];
-    for (var i = 0; i < BOARD_SPACES.length; i++) {
-        if (BOARD_SPACES[i].type === type) {
-            matching.push(BOARD_SPACES[i]);
-        }
-    }
-    return matching;
-}
-
-// Check if coordinates are on the board
-function isOnMonopolyBoard(worldX, worldZ) {
-    return getSpaceIdFromCoordinates(worldX, worldZ) !== null;
-}
+const CORNER_MULT = 1.6;
+const PROPERTY_WIDTH = 1;
+const SCALE = 20 / (2 * CORNER_MULT + 9 * PROPERTY_WIDTH);
+const CORNER = CORNER_MULT * SCALE;
+const PROPERTY = PROPERTY_WIDTH * SCALE;

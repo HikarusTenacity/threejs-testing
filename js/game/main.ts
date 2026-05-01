@@ -269,4 +269,59 @@ var render = function () {
     fpsCounter.update({ renderer: renderer, gameManager: gameManager });
 };
 
+// === ANIMATION EDITOR API ===
+// Expose game state for testing/debugging
+(window as any).GAME_STATE = {
+    scene: scene,
+    camera: camera,
+    renderer: renderer,
+    pieces: worldPieces,
+    gameManager: gameManager,
+    diceAnimator: gameManager.diceAnimator,
+    get isAnimating() {
+        return gameManager.diceAnimator.isAnimating;
+    }
+};
+
+(window as any).testAnimations = {
+    playPlayerWalk: function(playerIndex: number, targetSpace: number) {
+        var piece = worldPieces[playerIndex || 0];
+        if (!piece) {
+            console.error('Player ' + playerIndex + ' not found');
+            return;
+        }
+        var animator = createPlayerAnimator(piece, targetSpace);
+        animator.init();
+        (window as any).playerAnimator = animator;
+    },
+
+    rollDice: function(speedMultiplier: number) {
+        if (!gameManager || !gameManager.diceAnimator) {
+            console.error('Dice animator not available');
+            return;
+        }
+        gameManager.diceAnimator.setupCutscene();
+        gameManager.diceAnimator.setSpeedMultiplier(speedMultiplier || 1.0);
+        gameManager.diceAnimator.startDiceRoll();
+    },
+
+    setIdleSpeedMultiplier: function(mult: number) {
+        worldPieces.forEach((piece: any) => {
+            piece.userData.idleSpeedMultiplier = mult;
+        });
+    },
+
+    setBodySwayAmount: function(amount: number) {
+        worldPieces.forEach((piece: any) => {
+            piece.userData.bodySwayAmount = amount;
+        });
+    },
+
+    resetIdlePhases: function() {
+        worldPieces.forEach((piece: any) => {
+            piece.userData.idlePhase = Math.random() * Math.PI * 2;
+        });
+    }
+};
+
 render();

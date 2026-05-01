@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Player corner panels - displays player info and 3D portrait in corners
 var playerCornerPanels = {
     cornerPositions: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],

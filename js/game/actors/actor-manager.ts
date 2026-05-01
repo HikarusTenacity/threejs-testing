@@ -2,7 +2,7 @@
 
 // Distribute pieces evenly within a space
 // Returns array of positions for each piece
-function distributePiecesInSpace(piecesAtSpace, spaceId) {
+function distributePiecesInSpace(piecesAtSpace: any[], spaceId: number) {
     var spaceBounds = getSpaceBounds(spaceId);
     var pieceCount = piecesAtSpace.length;
 
@@ -56,5 +56,19 @@ function updateAllPiecePositions() {
                 updatePiecePosition(player.piece, positions[i]);
             }
         }
+    }
+}
+
+
+function setPlayerPiece(playerId, piece) {
+    if (playerId >= 0 && playerId < PLAYERS.length) {
+        PLAYERS[playerId].piece = piece;
+        PLAYER_PIECES[playerId] = piece;
+    }
+}
+
+function movePlayerToSpace(playerId, spaceId) {
+    if (playerId >= 0 && playerId < PLAYERS.length) {
+        PLAYERS[playerId].currentSpace = spaceId;
     }
 }

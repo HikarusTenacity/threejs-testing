@@ -193,3 +193,58 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
     animator.init();
     return animator;
 }
+
+function applyIdleAnimations(pieces, nowMs) {
+    var seconds = nowMs * 0.001;
+
+    for (var pieceIndex = 0; pieceIndex < pieces.length; pieceIndex++) {
+        var piece = pieces[pieceIndex];
+        if (!piece) {
+            continue;
+        }
+
+        var pieceHasWalkAnimation = false;
+        for (var checkIndex = 0; checkIndex < piece.children.length; checkIndex++) {
+            if (piece.children[checkIndex].originalPosition) {
+                pieceHasWalkAnimation = true;
+                break;
+            }
+        }
+
+        if (pieceHasWalkAnimation) {
+            continue;
+        }
+
+        // Get editable animation parameters from piece userData
+        var speedMult = piece.userData.idleSpeedMultiplier !== undefined ? piece.userData.idleSpeedMultiplier : 1.0;
+        var swayAmount = piece.userData.bodySwayAmount !== undefined ? piece.userData.bodySwayAmount : 0.15;
+        var headBobAmount = piece.userData.headBobAmount !== undefined ? piece.userData.headBobAmount : 0.08;
+
+        var phase = (piece.userData.idlePhase || 0) + pieceIndex * 0.35;
+        var bodyBob = Math.sin(seconds * 2.2 * speedMult + phase) * headBobAmount;
+        piece.position.y = (piece.userData.baseY || piece.position.y) + bodyBob;
+
+        for (var childIndex = 0; childIndex < piece.children.length; childIndex++) {
+            var child = piece.children[childIndex];
+            var basePos = child.userData.idleBasePosition;
+            var baseRot = child.userData.idleBaseRotation;
+
+            if (!basePos || !baseRot) {
+                continue;
+            }
+
+            child.position.copy(basePos);
+            child.rotation.copy(baseRot);
+
+            if (basePos.y > 0.3) {
+                // Head bob
+                child.position.y += Math.sin(seconds * 3.0 * speedMult + phase) * headBobAmount * 0.5;
+            } else if (basePos.y > -0.2 && Math.abs(basePos.x) > 0.2) {
+                // Arm swing with sway amount modifier
+                var armSwing = Math.sin(seconds * 2.4 * speedMult + phase) * swayAmount;
+                child.rotation.x += basePos.x < 0 ? -armSwing : armSwing;
+            }
+        }
+    }
+}
+
