@@ -35,5 +35,3 @@ declare global {
 		PLAYERS: any[];
 	}
 }
-
-export {};

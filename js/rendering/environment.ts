@@ -1,9 +1,5 @@
-/// <reference path="../../types/globals.d.ts" />
-
-var environmentVisuals = {
-    trees: [],
-    mountains: []
-};
+const environmentVisuals = {trees: [], mountains: []};
+let treeSwayMultiplier = 1;
 
 function setupEnvironment(scene: THREE.Scene) {
     const groundColor = 0x4CAF50;
@@ -70,6 +66,10 @@ function setEnvironmentQuality(quality: string) {
     for (const mountain of environmentVisuals.mountains) mountain.visible = showMountains;
 }
 
+function setTreeSwayMultiplier(multiplier: number) {
+    treeSwayMultiplier = Math.max(0, multiplier || 1);
+}
+
 function updateEnvironmentAnimations(nowMs: number) {
     const animTime = nowMs * 0.001;
     const trees = environmentVisuals.trees;
@@ -78,8 +78,8 @@ function updateEnvironmentAnimations(nowMs: number) {
 
     for (const tree of trees) {
         const phase = tree.userData.swayPhase || 0;
-        const amp = tree.userData.swayAmplitude || 0.015;
-        const speed = tree.userData.swaySpeed || 0.9;
+        const amp = (tree.userData.swayAmplitude || 0.015) * treeSwayMultiplier;
+        const speed = (tree.userData.swaySpeed || 0.9) * treeSwayMultiplier;
         const baseX = tree.userData.baseRotationX || 0;
         const baseZ = tree.userData.baseRotationZ || 0;
 

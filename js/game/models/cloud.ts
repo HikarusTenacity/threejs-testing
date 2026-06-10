@@ -46,8 +46,9 @@ function generateCloud() {
 
 function updateCloudPosition(cloud: any) {
     if (cloud.userData.velocity) {
-        cloud.position.x += cloud.userData.velocity.x;
-        cloud.position.z += cloud.userData.velocity.z;
+        var speedMult = typeof cloudSpeedMultiplier === 'number' ? cloudSpeedMultiplier : 1;
+        cloud.position.x += cloud.userData.velocity.x * speedMult;
+        cloud.position.z += cloud.userData.velocity.z * speedMult;
         
         var bounds = cloud.userData.movementBounds;
         

@@ -5,14 +5,45 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
         targetSpaceId: targetSpaceId,
         isAnimating: false,
         animationStartTime: 0,
-        animationDuration: 2000,  // 2 seconds to walk
+        animationDuration: 2000,
         playerStartPos: null,
         playerTargetPos: null,
         playerWalkPath: [],
         speedMultiplier: 1,
+        walkCycleSpeed: 8,
+        legSwingAmount: 0.35,
+        headBobAmount: 0.1,
+        bodyBobAmount: 0.06,
+        armSwingAmount: 0.4,
 
         setSpeedMultiplier: function(multiplier) {
             this.speedMultiplier = Math.max(0.5, Math.min(2.0, multiplier || 1));
+        },
+
+        setWalkDuration: function(durationMs) {
+            this.animationDuration = Math.max(250, durationMs || 2000);
+        },
+
+        setMotionProfile: function(profile) {
+            if (!profile) {
+                return;
+            }
+
+            if (profile.walkCycleSpeed !== undefined) {
+                this.walkCycleSpeed = Math.max(0.1, profile.walkCycleSpeed);
+            }
+            if (profile.legSwingAmount !== undefined) {
+                this.legSwingAmount = Math.max(0, profile.legSwingAmount);
+            }
+            if (profile.headBobAmount !== undefined) {
+                this.headBobAmount = Math.max(0, profile.headBobAmount);
+            }
+            if (profile.bodyBobAmount !== undefined) {
+                this.bodyBobAmount = Math.max(0, profile.bodyBobAmount);
+            }
+            if (profile.armSwingAmount !== undefined) {
+                this.armSwingAmount = Math.max(0, profile.armSwingAmount);
+            }
         },
         
         init: function() {
@@ -123,8 +154,7 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
         
         animatePlayerWalk: function(progress) {
             // Walking animation - legs swing and body bobs up and down
-            var walkSpeed = 8;  // Speed of walking motion
-            var walkCycle = (progress * walkSpeed) % 1;  // 0 to 1 repeating cycle
+            var walkCycle = (progress * this.walkCycleSpeed) % 1;
             
             // Iterate through all children of the player piece
             for (var i = 0; i < this.playerPiece.children.length; i++) {
@@ -139,7 +169,7 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
                 // Leg detection by y position
                 if (child.originalPosition.y < -0.4) {
                     // Legs - swing them forward and backward
-                    var legSwing = Math.sin(walkCycle * Math.PI * 2) * 0.35;
+                    var legSwing = Math.sin(walkCycle * Math.PI * 2) * this.legSwingAmount;
                     if (child.originalPosition.x < 0) {
                         child.rotation.x = child.originalRotation.x + legSwing;
                     } else if (child.originalPosition.x > 0) {
@@ -147,17 +177,17 @@ function createPlayerAnimator(playerPiece, targetSpaceId) {
                     }
                 } else if (child.originalPosition.y > 0.3) {
                     // Head - bob up and down
-                    var bobAmount = Math.sin(walkCycle * Math.PI * 2) * 0.1;
+                    var bobAmount = Math.sin(walkCycle * Math.PI * 2) * this.headBobAmount;
                     child.position.y = child.originalPosition.y + bobAmount;
                 } else if (child.originalPosition.y > -0.1 && child.originalPosition.y < 0.2) {
                     // Body - slight bob
-                    var bodyBob = Math.sin(walkCycle * Math.PI * 2) * 0.06;
+                    var bodyBob = Math.sin(walkCycle * Math.PI * 2) * this.bodyBobAmount;
                     child.position.y = child.originalPosition.y + bodyBob;
                 }
                 
                 // Arms swing opposite to legs
                 if (child.originalPosition.x && Math.abs(child.originalPosition.x) > 0.2 && child.originalPosition.y > -0.2 && child.originalPosition.y < 0.3) {
-                    var armSwing = Math.sin(walkCycle * Math.PI * 2) * 0.4;
+                    var armSwing = Math.sin(walkCycle * Math.PI * 2) * this.armSwingAmount;
                     if (child.originalPosition.x < 0) {
                         child.rotation.x = child.originalRotation.x - armSwing;
                     } else if (child.originalPosition.x > 0) {

@@ -1,22 +1,40 @@
-// Single button/mouse input handler
 function createLocalMultiplayerInput() {
-    var input = {
-        // Callback for player actions
+    const bcolors = {
+        green:  { bg: 'linear-gradient(180deg, #4CAF50 0%, #45a049 100%)', border: '#2d6b2f', shadow: '#1e4620' },
+        blue:   { bg: 'linear-gradient(180deg, #2196F3 0%, #1976D2 100%)', border: '#0d47a1', shadow: '#0a3270' },
+        orange: { bg: 'linear-gradient(180deg, #FF9800 0%, #F57C00 100%)', border: '#E65100', shadow: '#bf360c' },
+        red:    { bg: 'linear-gradient(180deg, #f44336 0%, #d32f2f 100%)', border: '#b71c1c', shadow: '#7f0000' }
+    };
+
+    type buttonColor = 'green' | 'blue' | 'orange' | 'red';
+    type LocalMultiplayerInput = {
+        onActionForPlayer: ((player: string, action: string) => void) | null;
+        onRawKeyInput: ((key: string) => void) | null;
+        actionButton: HTMLButtonElement | null;
+
+        init(): void;
+        update(): void;
+        createActionButton(): void;
+        setButtonText(text?: string): void;
+        setButtonColor(color?: buttonColor): void;
+    };
+
+    const input: LocalMultiplayerInput = {
         onActionForPlayer: null,
         onRawKeyInput: null,
         actionButton: null,
         
         init: function() {
-            var self = this;
-            
-            // Create the action button
+            let self = this;
             this.createActionButton();
+        },
+
+        update: function() {
         },
         
         createActionButton: function() {
-            var self = this;
+            let self = this;
             
-            // Create button element
             this.actionButton = document.createElement('button');
             this.actionButton.id = 'actionButton';
             this.actionButton.textContent = 'Click to Start';
@@ -44,15 +62,11 @@ function createLocalMultiplayerInput() {
                 text-rendering: optimizeSpeed;
                 filter: blur(var(--lofi-text-blur-controls));
             `;
-            
-            // Click handler
-            this.actionButton.addEventListener('click', function() {
-                if (self.onActionForPlayer) {
-                    self.onActionForPlayer('ANY', 'ACTION');
-                }
+
+            this.actionButton.addEventListener('click', () => {
+                this.onActionForPlayer?.('ANY', 'ACTION');
             });
-            
-            // Hover effects
+
             this.actionButton.addEventListener('mouseenter', function() {
                 this.style.transform = 'translateX(-50%) translateY(-2px)';
                 this.style.boxShadow = '0 8px 0 #1e4620, 0 12px 25px rgba(0,0,0,0.5)';
@@ -63,7 +77,6 @@ function createLocalMultiplayerInput() {
                 this.style.boxShadow = '0 6px 0 #1e4620, 0 10px 20px rgba(0,0,0,0.4)';
             });
             
-            // Active state
             this.actionButton.addEventListener('mousedown', function() {
                 this.style.transform = 'translateX(-50%) translateY(3px)';
                 this.style.boxShadow = '0 3px 0 #1e4620, 0 5px 15px rgba(0,0,0,0.4)';
@@ -77,29 +90,19 @@ function createLocalMultiplayerInput() {
             document.body.appendChild(this.actionButton);
         },
         
-        setButtonText: function(text) {
+        setButtonText: function(text: string = "placeholder") {
             if (this.actionButton) {
                 this.actionButton.textContent = text;
             }
         },
         
-        setButtonColor: function(color) {
+        setButtonColor: function(color: buttonColor = "green") {
             if (this.actionButton) {
-                var colors = {
-                    green: { bg: 'linear-gradient(180deg, #4CAF50 0%, #45a049 100%)', border: '#2d6b2f', shadow: '#1e4620' },
-                    blue: { bg: 'linear-gradient(180deg, #2196F3 0%, #1976D2 100%)', border: '#0d47a1', shadow: '#0a3270' },
-                    orange: { bg: 'linear-gradient(180deg, #FF9800 0%, #F57C00 100%)', border: '#E65100', shadow: '#bf360c' },
-                    red: { bg: 'linear-gradient(180deg, #f44336 0%, #d32f2f 100%)', border: '#b71c1c', shadow: '#7f0000' }
-                };
-                var c = colors[color] || colors.green;
+                const c = bcolors[color] ?? bcolors.green;
                 this.actionButton.style.background = c.bg;
                 this.actionButton.style.borderColor = c.border;
                 this.actionButton.style.boxShadow = `0 6px 0 ${c.shadow}, 0 10px 20px rgba(0,0,0,0.4)`;
             }
-        },
-        
-        update: function() {
-            // Nothing to poll - using click events only
         }
     };
     

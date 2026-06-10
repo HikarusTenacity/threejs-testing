@@ -15,12 +15,14 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            position: relative;
         }
 
         #gameContainer {
             flex: 1;
             background: #0a0a0a;
             position: relative;
+            z-index: 1;
         }
 
         #gameContainer canvas {
@@ -38,6 +40,8 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            position: relative;
+            z-index: 2;
         }
 
         .section {
@@ -358,7 +362,19 @@
             gameManager: null,
             pieces: [],
             diceAnimator: null,
-            environmentAnimating: true
+            environmentAnimating: true,
+            tuning: {
+                idleSpeed: 1,
+                swayAmount: 0.15,
+                headBob: 0.08,
+                walkDuration: 2000,
+                walkSpeed: 1,
+                diceSpeed: 1,
+                rollDuration: 1200,
+                spinAmount: 1,
+                treeSway: 1,
+                cloudSpeed: 1
+            }
         };
 
         // Initialize UI value displays
@@ -405,34 +421,71 @@
             // Apply to game parameters if loaded
             if (!editor.gameLoaded) return;
 
+            const liveGameState = window.GAME_STATE || null;
+            const livePlayerAnimator = window.playerAnimator || null;
+            const liveDiceAnimator = (liveGameState && liveGameState.diceAnimator) || editor.diceAnimator || null;
+
             switch(sliderId) {
                 case 'idleSpeed':
+                    editor.tuning.idleSpeed = val;
                     // Scale all idle animations
                     editor.pieces.forEach(p => {
                         p.userData.idleSpeedMultiplier = val;
                     });
                     break;
                 case 'swayAmount':
+                    editor.tuning.swayAmount = val;
                     editor.pieces.forEach(p => {
                         p.userData.bodySwayAmount = val;
                     });
                     break;
+                case 'headBob':
+                    editor.tuning.headBob = val;
+                    editor.pieces.forEach(p => {
+                        p.userData.headBobAmount = val;
+                    });
+                    break;
+                case 'walkDuration':
+                    editor.tuning.walkDuration = val;
+                    if (livePlayerAnimator && livePlayerAnimator.setWalkDuration) {
+                        livePlayerAnimator.setWalkDuration(val);
+                    }
+                    break;
                 case 'walkSpeed':
-                    if (window.playerAnimator) {
-                        window.playerAnimator.setSpeedMultiplier(val);
+                    editor.tuning.walkSpeed = val;
+                    if (livePlayerAnimator) {
+                        livePlayerAnimator.setSpeedMultiplier(val);
                     }
                     break;
                 case 'diceSpeed':
-                    if (window.diceAnimator) {
-                        window.diceAnimator.setSpeedMultiplier(val);
+                    editor.tuning.diceSpeed = val;
+                    if (liveDiceAnimator) {
+                        liveDiceAnimator.setSpeedMultiplier(val);
+                    }
+                    break;
+                case 'rollDuration':
+                    editor.tuning.rollDuration = val;
+                    if (liveDiceAnimator && liveDiceAnimator.setRollDuration) {
+                        liveDiceAnimator.setRollDuration(val);
+                    }
+                    break;
+                case 'spinAmount':
+                    editor.tuning.spinAmount = val;
+                    if (liveDiceAnimator && liveDiceAnimator.setSpinAmount) {
+                        liveDiceAnimator.setSpinAmount(val);
                     }
                     break;
                 case 'treeSway':
+                    editor.tuning.treeSway = val;
+                    if (typeof window.setTreeSwayMultiplier === 'function') {
+                        window.setTreeSwayMultiplier(val);
+                    }
                     document.body.style.setProperty('--tree-sway-mult', val);
                     break;
                 case 'cloudSpeed':
-                    if (window.cloudSpeed !== undefined) {
-                        window.cloudSpeed = val;
+                    editor.tuning.cloudSpeed = val;
+                    if (typeof window.setCloudSpeedMultiplier === 'function') {
+                        window.setCloudSpeedMultiplier(val);
                     }
                     break;
             }
@@ -451,8 +504,19 @@
             console.log(`Testing walk: Player ${playerIdx} to Space ${targetSpace} at ${speed}x speed`);
             if (window.testAnimations && window.testAnimations.playPlayerWalk) {
                 window.testAnimations.playPlayerWalk(playerIdx, targetSpace);
-                if (window.playerAnimator) {
-                    window.playerAnimator.setSpeedMultiplier(speed);
+                const livePlayerAnimator = window.playerAnimator || null;
+                if (livePlayerAnimator) {
+                    livePlayerAnimator.setSpeedMultiplier(speed);
+                    if (livePlayerAnimator.setWalkDuration) {
+                        livePlayerAnimator.setWalkDuration(editor.tuning.walkDuration);
+                    }
+                    if (livePlayerAnimator.setMotionProfile) {
+                        livePlayerAnimator.setMotionProfile({
+                            headBobAmount: editor.tuning.headBob,
+                            bodyBobAmount: editor.tuning.swayAmount * 0.4,
+                            armSwingAmount: editor.tuning.swayAmount * 2.0
+                        });
+                    }
                 }
             }
             
@@ -476,6 +540,15 @@
             
             if (window.testAnimations && window.testAnimations.rollDice) {
                 window.testAnimations.rollDice(speed);
+                const liveDiceAnimator = (window.GAME_STATE && window.GAME_STATE.diceAnimator) || editor.diceAnimator;
+                if (liveDiceAnimator) {
+                    if (liveDiceAnimator.setRollDuration) {
+                        liveDiceAnimator.setRollDuration(editor.tuning.rollDuration);
+                    }
+                    if (liveDiceAnimator.setSpinAmount) {
+                        liveDiceAnimator.setSpinAmount(editor.tuning.spinAmount);
+                    }
+                }
             }
             
             updateStatus('Rolling dice', true);
@@ -519,29 +592,62 @@
 
         // Export test API
         function exposeTestAPI() {
+            const baseTestAnimations = window.testAnimations || null;
+
             window.testAnimations = {
                 setIdleParams: function(params) {
+                    const pieces = (window.GAME_STATE && window.GAME_STATE.pieces) || editor.pieces || [];
                     if (params.speed !== undefined) {
                         document.getElementById('idleSpeed').value = params.speed;
+                        editor.tuning.idleSpeed = params.speed;
+                        pieces.forEach(piece => {
+                            piece.userData.idleSpeedMultiplier = params.speed;
+                        });
                     }
                     if (params.amount !== undefined) {
                         document.getElementById('swayAmount').value = params.amount;
+                        editor.tuning.swayAmount = params.amount;
+                        pieces.forEach(piece => {
+                            piece.userData.bodySwayAmount = params.amount;
+                        });
                     }
                 },
                 playPlayerWalk: function(playerIdx, targetSpace) {
                     if (!window.GAME_STATE) return;
-                    const pieces = window.GAME_STATE.pieces;
-                    if (pieces && pieces[playerIdx]) {
-                        const animator = createPlayerAnimator(pieces[playerIdx], targetSpace);
-                        animator.init();
-                        editor.pieces = pieces;
+                    if (baseTestAnimations && baseTestAnimations.playPlayerWalk) {
+                        baseTestAnimations.playPlayerWalk(playerIdx, targetSpace);
+                        const livePlayerAnimator = window.playerAnimator || null;
+                        if (livePlayerAnimator) {
+                            livePlayerAnimator.setSpeedMultiplier(editor.tuning.walkSpeed);
+                            if (livePlayerAnimator.setWalkDuration) {
+                                livePlayerAnimator.setWalkDuration(editor.tuning.walkDuration);
+                            }
+                            if (livePlayerAnimator.setMotionProfile) {
+                                livePlayerAnimator.setMotionProfile({
+                                    headBobAmount: editor.tuning.headBob,
+                                    bodyBobAmount: editor.tuning.swayAmount * 0.4,
+                                    armSwingAmount: editor.tuning.swayAmount * 2.0
+                                });
+                            }
+                        }
+                        editor.pieces = (window.GAME_STATE && window.GAME_STATE.pieces) || editor.pieces;
                         updateStatus('Walking...', true);
                     }
                 },
                 rollDice: function(speed) {
                     if (!window.GAME_STATE) return;
-                    if (window.GAME_STATE.diceAnimator) {
-                        window.GAME_STATE.diceAnimator.setSpeedMultiplier(speed || 1);
+                    const liveDiceAnimator = (window.GAME_STATE && window.GAME_STATE.diceAnimator) || editor.diceAnimator;
+                    if (liveDiceAnimator) {
+                        if (liveDiceAnimator.setRollDuration) {
+                            liveDiceAnimator.setRollDuration(editor.tuning.rollDuration);
+                        }
+                        if (liveDiceAnimator.setSpinAmount) {
+                            liveDiceAnimator.setSpinAmount(editor.tuning.spinAmount);
+                        }
+                    }
+
+                    if (baseTestAnimations && baseTestAnimations.rollDice) {
+                        baseTestAnimations.rollDice(speed || 1);
                         console.log('Dice rolling at', speed, 'x speed');
                         updateStatus('Rolling...', true);
                     }
@@ -559,8 +665,9 @@
         function checkGameLoaded() {
             if (window.GAME_STATE || window.pieces) {
                 editor.gameLoaded = true;
-                editor.pieces = window.pieces || [];
-                editor.diceAnimator = window.diceAnimator;
+                editor.pieces = (window.GAME_STATE && window.GAME_STATE.pieces) || window.pieces || [];
+                editor.gameManager = window.GAME_STATE ? window.GAME_STATE.gameManager : null;
+                editor.diceAnimator = window.GAME_STATE ? window.GAME_STATE.diceAnimator : (window.diceAnimator || null);
                 updateStatus('Game loaded. Ready to test.', true);
                 exposeTestAPI();
                 console.log('Animation Editor Ready', {

@@ -1,6 +1,6 @@
 function getPiecesAtSpace(spaceId: number) {
-    var pieces = [];
-    for (var i = 0; i < PLAYERS.length; i++) {
+    let pieces = [];
+    for (let i = 0; i < PLAYERS.length; i++) {
         if (PLAYERS[i].currentSpace === spaceId && PLAYERS[i].piece) {
             pieces.push({
                 playerId: PLAYERS[i].id,

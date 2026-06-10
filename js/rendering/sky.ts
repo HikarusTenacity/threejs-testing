@@ -1,26 +1,28 @@
-// Sky elements - sun, clouds, fog, background
-var cloudsToUpdate = [];
-var cloudEffectsEnabled = true;
-var skyQuality = 'high';
-var skyScene = null;
-var skyColor = 0x87ceeb;
-var fogColor = 0x5a7a9e;
-var sunMesh = null;
-var haloMesh = null;
+let cloudsToUpdate: THREE.Mesh[] = [];
+let cloudEffectsEnabled = true;
+let skyQuality = 'high';
+let skyScene: THREE.Scene = null;
+const skyColor = 0x87ceeb;
+const fogColor = 0x5a7a9e;
+let sunMesh: THREE.Mesh = null;
+let haloMesh: THREE.Mesh = null;
+let cloudSpeedMultiplier = 1;
 
-function setupSky(scene, directionalLight) {
-    var sunColor = 0xffff00;
+type SkyQuality = 'low' | 'medium' | 'high';
+
+function setupSky(scene: THREE.Scene, directionalLight: THREE.DirectionalLight) {
+    const sunColor = 0xffff00;
     skyScene = scene;
 
-    var sunGeometry = new THREE.SphereGeometry(3, 16, 16);
-    var sunMaterial = new THREE.MeshBasicMaterial({color: sunColor, flatShading: true});
+    const sunGeometry = new THREE.SphereGeometry(3, 16, 16);
+    const sunMaterial = new THREE.MeshBasicMaterial({color: sunColor, flatShading: true});
     sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
     sunMesh.position.copy(directionalLight.position);
     scene.add(sunMesh);
 
     // Glow halo around sun
-    var haloGeometry = new THREE.SphereGeometry(8, 32, 32);
-    var haloMaterial = new THREE.MeshBasicMaterial({
+    const haloGeometry = new THREE.SphereGeometry(8, 32, 32);
+    const haloMaterial = new THREE.MeshBasicMaterial({
         color: sunColor,
         transparent: true,
         opacity: 0.15,
@@ -32,45 +34,40 @@ function setupSky(scene, directionalLight) {
     
     //generate clouds
     cloudsToUpdate = [];
-    for (var i = 0; i < 80; i++) {
-        var cloud = generateCloud();
+    for (let i = 0; i < 80; i++) {
+        const cloud = generateCloud();
         scene.add(cloud);
         cloudsToUpdate.push(cloud);
     }
 
-    //give sky gradient with atmospheric fog
     applySkyQuality();
 }
 
 function updateClouds() {
     if (!cloudEffectsEnabled || skyQuality !== 'high') return;
-    for (var c of cloudsToUpdate) updateCloudPosition(c);
+    for (const c of cloudsToUpdate) updateCloudPosition(c);
 }
 
-function setCloudEffectsEnabled(enabled) {
-    cloudEffectsEnabled = !!enabled;
-
+function setCloudEffectsEnabled(enabled: boolean) {
+    cloudEffectsEnabled = enabled;
     applySkyQuality();
 }
 
-function setSkyQuality(quality) {
-    var validQualities = ['low', 'medium', 'high'];
+function setCloudSpeedMultiplier(multiplier: number) {
+    cloudSpeedMultiplier = Math.max(0, multiplier || 1);
+}
 
-    if (validQualities.indexOf(quality) === -1) {
-        quality = 'high';
-    }
-
+function setSkyQuality(quality: SkyQuality = 'high') {
     skyQuality = quality;
     applySkyQuality();
 }
 
 function applySkyQuality() {
-    var showBackground = skyQuality !== 'low';
-    var showClouds = skyQuality === 'high';
-    var cloudVisible = showClouds && cloudEffectsEnabled;
+    const showBackground = skyQuality !== 'low';
+    const showClouds = skyQuality === 'high';
+    const cloudsVisible = showClouds && cloudEffectsEnabled;
 
     if (sunMesh) sunMesh.visible = showBackground;
-
     if (haloMesh) haloMesh.visible = showBackground;
 
     if (skyScene) {
@@ -83,7 +80,7 @@ function applySkyQuality() {
         }
     }
 
-    for (var i = 0; i < cloudsToUpdate.length; i++) {
-        cloudsToUpdate[i].visible = cloudVisible;
+    for (const cloud of cloudsToUpdate) {
+        cloud.visible = cloudsVisible;
     }
 }

@@ -3,28 +3,28 @@
 // Distribute pieces evenly within a space
 // Returns array of positions for each piece
 function distributePiecesInSpace(piecesAtSpace: any[], spaceId: number) {
-    var spaceBounds = getSpaceBounds(spaceId);
-    var pieceCount = piecesAtSpace.length;
+    const spaceBounds = getSpaceBounds(spaceId);
+    const pieceCount = piecesAtSpace.length;
 
     if (pieceCount === 0) return [];
 
-    var positions = [];
-    var width = spaceBounds.xMax - spaceBounds.xMin;
-    var depth = spaceBounds.zMax - spaceBounds.zMin;
+    let positions = [];
+    let width = spaceBounds.xMax - spaceBounds.xMin;
+    let depth = spaceBounds.zMax - spaceBounds.zMin;
 
-    var cols, rows;
+    let cols, rows;
     cols = (pieceCount % 2 === 0) ? 2 : 1;
     rows = (pieceCount < 4) ? 1 : 2; 
 
-    var cellWidth = width / cols;
-    var cellDepth = depth / rows;
+    let cellWidth = width / cols;
+    let cellDepth = depth / rows;
 
-    for (var i = 0; i < pieceCount; i++) {
-        var col = i % cols;
-        var row = Math.floor(i / cols);
+    for (let i = 0; i < pieceCount; i++) {
+        let col = i % cols;
+        let row = Math.floor(i / cols);
 
-        var x = spaceBounds.xMin + (col + 0.5) * cellWidth;
-        var z = spaceBounds.zMin + (row + 0.5) * cellDepth;
+        let x = spaceBounds.xMin + (col + 0.5) * cellWidth;
+        let z = spaceBounds.zMin + (row + 0.5) * cellDepth;
 
         positions.push({
             x: x,
@@ -46,12 +46,12 @@ function updatePiecePosition(piece, position) {
 
 // Update all pieces on board based on player positions
 function updateAllPiecePositions() {
-    for (var playerId = 0; playerId < PLAYERS.length; playerId++) {
-        var player = PLAYERS[playerId];
-        var piecesAtSpace = getPiecesAtSpace(player.currentSpace);
-        var positions = distributePiecesInSpace(piecesAtSpace, player.currentSpace);
+    for (let playerId = 0; playerId < PLAYERS.length; playerId++) {
+        const player = PLAYERS[playerId];
+        const piecesAtSpace = getPiecesAtSpace(player.currentSpace);
+        const positions = distributePiecesInSpace(piecesAtSpace, player.currentSpace);
 
-        for (var i = 0; i < positions.length; i++) {
+        for (let i = 0; i < positions.length; i++) {
             if (positions[i].playerIndex === playerId && player.piece) {
                 updatePiecePosition(player.piece, positions[i]);
             }

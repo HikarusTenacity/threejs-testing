@@ -9,6 +9,8 @@ function createDiceAnimator(scene, camera) {
         currentThrowType: 0,
         result: 0,
         animationDuration: 1200,  // milliseconds for pan and roll
+        rollDuration: 1200,
+        panDuration: 1200,
         animationStartTime: 0,
         cameraStartPos: null,
         targetCameraPos: null,
@@ -20,9 +22,24 @@ function createDiceAnimator(scene, camera) {
         waitAfterRollDuration: 1000,  // 1 second wait
         gameManager: null,
         speedMultiplier: 1,
+        spinAmount: 1,
+        rollForwardAmount: 0.5,
+        cameraAlignStrength: 0.3,
 
         setSpeedMultiplier: function(multiplier) {
             this.speedMultiplier = Math.max(0.5, Math.min(2.0, multiplier || 1));
+        },
+
+        setPanDuration: function(durationMs) {
+            this.panDuration = Math.max(250, durationMs || 1200);
+        },
+
+        setRollDuration: function(durationMs) {
+            this.rollDuration = Math.max(250, durationMs || 1200);
+        },
+
+        setSpinAmount: function(amount) {
+            this.spinAmount = Math.max(0, amount || 1);
         },
         
         setupCutscene: function() {
@@ -133,7 +150,7 @@ function createDiceAnimator(scene, camera) {
             
             if (this.animationPhase === 'PAN') {
                 var elapsed = (Date.now() - this.animationStartTime) * this.speedMultiplier;
-                var progress = Math.min(elapsed / this.animationDuration, 1);
+                var progress = Math.min(elapsed / this.panDuration, 1);
                 
                 this.updateCameraAnimation(progress);
                 
@@ -148,7 +165,7 @@ function createDiceAnimator(scene, camera) {
                 }
             } else if (this.animationPhase === 'ROLLING') {
                 var elapsed = (Date.now() - this.animationStartTime) * this.speedMultiplier;
-                var progress = Math.min(elapsed / this.animationDuration, 1);
+                var progress = Math.min(elapsed / this.rollDuration, 1);
                 
                 // Animate dice rolling onto the floor in front of player
                 if (this.dice && this.currentPlayerPiece) {
@@ -184,18 +201,18 @@ function createDiceAnimator(scene, camera) {
                     
                     // Continuously spin the dice throughout entire animation
                     var spinMultiplier = (1 - progress); // Spin decreases toward end
-                    this.dice.rotation.x += 0.16 * spinMultiplier;
-                    this.dice.rotation.y += 0.24 * spinMultiplier;
-                    this.dice.rotation.z += 0.12 * spinMultiplier;
+                    this.dice.rotation.x += 0.16 * this.spinAmount * spinMultiplier;
+                    this.dice.rotation.y += 0.24 * this.spinAmount * spinMultiplier;
+                    this.dice.rotation.z += 0.12 * this.spinAmount * spinMultiplier;
                     
                     // Add rolling rotation (forward rotation based on forward movement)
                     // This makes it look like rolling instead of sliding
-                    this.dice.rotation.x += lateralProgress * 0.5; // Roll based on forward movement
+                    this.dice.rotation.x += lateralProgress * this.rollForwardAmount;
                     
                     // After hitting ground, smoothly rotate to show correct number
                     if (progress > groundHitProgress) {
                         var alignProgress = (progress - groundHitProgress) / (1 - groundHitProgress);
-                        this.smoothRotationtoward(this.targetDiceRotation, alignProgress * 0.3); // Reduce alignment strength to keep spinning visible
+                        this.smoothRotationtoward(this.targetDiceRotation, alignProgress * this.cameraAlignStrength);
                     }
                 }
                 

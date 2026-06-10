@@ -1,27 +1,40 @@
-// Main initialization and render loop
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+const scene: THREE.Scene = new THREE.Scene();
+const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
-var retroMode = false;
-var retroOverlay = null;
-var renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' });
-var pixelScale = retroMode ? 2 : 1;
-var retroEffects = {
+type retroEffectsSettings = {
+    contrast: number;
+    saturation: number;
+    brightness: number;
+    overlayOpacity: number;
+};
+
+let retroMode: boolean = false;
+let retroOverlay: HTMLDivElement | null = null;
+let pixelScale: number = retroMode ? 2 : 1;
+const retroEffects: retroEffectsSettings = {
     contrast: 1.12,
     saturation: 0.86,
     brightness: 1.14,
     overlayOpacity: 0.44
 };
 
+const renderer = new THREE.WebGLRenderer({ 
+    antialias: false, 
+    powerPreference: 'high-performance' 
+});
+
 function syncViewportSize() {
-    var viewportWidth = Math.max(1, window.innerWidth);
-    var viewportHeight = Math.max(1, window.innerHeight);
+    const viewportWidth = Math.max(1, window.innerWidth);
+    const viewportHeight = Math.max(1, window.innerHeight);
 
     camera.aspect = viewportWidth / viewportHeight;
     camera.updateProjectionMatrix();
 
-    // Keep CSS size controlled by styles while updating render target resolution.
-    renderer.setSize(viewportWidth / pixelScale, viewportHeight / pixelScale, false);
+    renderer.setSize(
+        viewportWidth / pixelScale, 
+        viewportHeight / pixelScale, 
+        false
+    );
 }
 
 syncViewportSize();
@@ -42,7 +55,7 @@ function syncRetroUiMode() {
 
 syncRetroUiMode();
 
-function setRetroModeEnabled(enabled) {
+function setRetroModeEnabled(enabled: boolean) {
     retroMode = !!enabled;
     pixelScale = retroMode ? 2 : 1;
 
@@ -87,12 +100,12 @@ function updateRetroScreenEffects() {
 
 createRetroOverlay();
 
-var infoDiv = document.getElementById('info');
-var fpsCounter = createFpsCounter();
+const infoDiv = document.getElementById('info');
+const fpsCounter = createFpsCounter();
 
 // create the pieces
-var worldPieces = createGamePieces();
-for (var pieceIndex = 0; pieceIndex < worldPieces.length; pieceIndex++) {
+const worldPieces = createGamePieces();
+for (let pieceIndex = 0; pieceIndex < worldPieces.length; pieceIndex++) {
     scene.add(worldPieces[pieceIndex]);
 }
 
@@ -103,7 +116,7 @@ initializeBoardSpaces();
 positionPiecesForCharacterSelect(worldPieces);
 
 // Setup environment and get directional light
-var directionalLight = setupEnvironment(scene);
+const directionalLight = setupEnvironment(scene);
 
 // Setup sky elements
 setupSky(scene, directionalLight);
@@ -115,38 +128,36 @@ createPlayableSpacesVisualization(scene);
 createBoardGridVisualization(scene);
 
 // Setup camera controls
-var cameraControls = setupCameraControls(camera, scene);
+const cameraControls = setupCameraControls(camera, scene);
 
 // Initialize game manager for local 4-player co-op
-var gameManager = createGameManager(scene, camera, worldPieces, renderer.domElement);
+const gameManager = createGameManager(scene, camera, worldPieces, renderer.domElement);
 
 // Initialize game UI
-var gameUI = createGameUI(infoDiv);
+const gameUI = createGameUI(infoDiv);
 
 // Initialize settings systems
-var settingsManager = createSettingsManager();
-var settingsMenu = createSettingsMenu(settingsManager);
-var creditsScreen = createCreditsScreen();
+const settingsManager = createSettingsManager();
+const settingsMenu = createSettingsMenu(settingsManager);
+const creditsScreen = createCreditsScreen();
 
-function setSceneShadowsEnabled(enabled) {
+function setSceneShadowsEnabled(enabled: boolean) {
     renderer.shadowMap.enabled = !!enabled;
     directionalLight.castShadow = !!enabled;
 }
 
-function applyMasterVolume(volume) {
-    // clamp all volumes to a value between 0 and 1
-    var clamped = Math.max(0, Math.min(1, volume));
+function applyMasterVolume(volume: number) {
+    const vol = clampValue(volume, 0, 1);
 
-    var mediaNodes = document.querySelectorAll('audio, video') as NodeListOf<HTMLMediaElement>;
-    for (var i = 0; i < mediaNodes.length; i++) mediaNodes[i].volume = clamped;
+    const mediaNodes = document.querySelectorAll('audio, video') as NodeListOf<HTMLMediaElement>;
+    for (let i = 0; i < mediaNodes.length; i++) mediaNodes[i].volume = vol;
 
-    // Fallback global volume for future sound effects codepaths.
-    (window as any).__GAME_MASTER_VOLUME__ = clamped;
+    (window as any).__GAME_MASTER_VOLUME__ = vol;
 }
 
 function applyGraphicsQuality(quality) {
-    var shadowsEnabled = quality !== 'low';
-    var effectsEnabled = quality === 'high';
+    let shadowsEnabled = quality !== 'low';
+    let effectsEnabled = quality === 'high';
 
     setSceneShadowsEnabled(shadowsEnabled);
 
@@ -179,15 +190,15 @@ settingsMenu.onVolumeChange(function(value) {
     settingsManager.setVolume(value);
 });
 
-settingsMenu.onGraphicsChange(function(quality) {
+settingsMenu.onGraphicsChange(function(quality: string) {
     settingsManager.setGraphicsQuality(quality);
 });
 
-settingsMenu.onGameSpeedChange(function(speed) {
+settingsMenu.onGameSpeedChange(function(speed: number) {
     settingsManager.setGameSpeed(speed);
 });
 
-settingsMenu.onRetroModeToggle(function(enabled) {
+settingsMenu.onRetroModeToggle(function(enabled: boolean) {
     settingsManager.setRetroMode(enabled);
 });
 
@@ -200,10 +211,10 @@ settingsMenu.onClose(function() {
 });
 
 // Initialize title screen gate
-var titleScreen = createTitleScreen();
-var hasGameStarted = false;
+const titleScreen = createTitleScreen();
+let hasGameStarted = false;
 
-if (gameManager.inputHandler && gameManager.inputHandler.actionButton) {
+if (gameManager.inputHandler?.actionButton) {
     gameManager.inputHandler.actionButton.style.display = 'none';
 }
 
@@ -211,7 +222,7 @@ titleScreen.onStart(function() {
     hasGameStarted = true;
     titleScreen.hide();
 
-    if (gameManager.inputHandler && gameManager.inputHandler.actionButton) {
+    if (gameManager.inputHandler?.actionButton) {
         gameManager.inputHandler.actionButton.style.display = 'block';
     }
 });
@@ -253,6 +264,13 @@ var render = function () {
         cameraControls.updateCamera();
     }
 
+    if ((window as any).playerAnimator && (window as any).playerAnimator.isAnimating) {
+        var stillWalking = (window as any).playerAnimator.update();
+        if (!stillWalking) {
+            (window as any).playerAnimator = null;
+        }
+    }
+
     // Update piece positions based on player locations (skip during animation)
     if (!gameManager.diceAnimator.isAnimating && !gameManager.isPregame()) {
         updateAllPiecePositions();
@@ -266,7 +284,10 @@ var render = function () {
 
     updateRetroScreenEffects();
     renderer.render(scene, camera);
-    fpsCounter.update({ renderer: renderer, gameManager: gameManager });
+    fpsCounter.update({ 
+        renderer: renderer, 
+        gameManager: gameManager 
+    });
 };
 
 // === ANIMATION EDITOR API ===
@@ -277,6 +298,9 @@ var render = function () {
     renderer: renderer,
     pieces: worldPieces,
     gameManager: gameManager,
+    get playerAnimator() {
+        return (window as any).playerAnimator || null;
+    },
     diceAnimator: gameManager.diceAnimator,
     get isAnimating() {
         return gameManager.diceAnimator.isAnimating;
@@ -285,12 +309,12 @@ var render = function () {
 
 (window as any).testAnimations = {
     playPlayerWalk: function(playerIndex: number, targetSpace: number) {
-        var piece = worldPieces[playerIndex || 0];
+        const piece = worldPieces[playerIndex || 0];
         if (!piece) {
             console.error('Player ' + playerIndex + ' not found');
             return;
         }
-        var animator = createPlayerAnimator(piece, targetSpace);
+        let animator = createPlayerAnimator(piece, targetSpace);
         animator.init();
         (window as any).playerAnimator = animator;
     },

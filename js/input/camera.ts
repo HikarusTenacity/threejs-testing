@@ -1,9 +1,19 @@
 // Camera controls and management
-function setupCameraControls(camera: any, scene: any) {
+function setupCameraControls(camera: THREE.PerspectiveCamera, scene: THREE.Scene) {
     camera.position.set(0, 8, 15);
     camera.lookAt(0, 0, 0);
 
-    var controls = {
+    type CameraControls = {
+        isDragging: boolean;
+        previousMouseX: number;
+        previousMouseY: number;
+        cameraAngleX: number;
+        cameraAngleY: number;
+        cameraDistance: number;
+        updateCamera: () => void;
+    };
+
+    const controls: CameraControls = {
         isDragging: false,
         previousMouseX: 0,
         previousMouseY: 0,
@@ -13,23 +23,21 @@ function setupCameraControls(camera: any, scene: any) {
         updateCamera: function() {}
     };
 
-    // Mouse down event
     document.addEventListener('mousedown', function(event) {
         controls.isDragging = true;
         controls.previousMouseX = event.clientX;
         controls.previousMouseY = event.clientY;
     });
 
-    // Mouse up event
+
     document.addEventListener('mouseup', function() {
         controls.isDragging = false;
     });
 
-    // Mouse move event
     document.addEventListener('mousemove', function(event) {
         if (controls.isDragging) {
-            var deltaX = event.clientX - controls.previousMouseX;
-            var deltaY = event.clientY - controls.previousMouseY;
+            const deltaX = event.clientX - controls.previousMouseX;
+            const deltaY = event.clientY - controls.previousMouseY;
 
             controls.cameraAngleX -= deltaX * 0.005;
             controls.cameraAngleY -= deltaY * 0.005;
@@ -54,9 +62,7 @@ function setupCameraControls(camera: any, scene: any) {
         controls.cameraDistance = Math.max(1, controls.cameraDistance); //clamp
     });
 
-    // Update camera function to be called in render loop
     controls.updateCamera = function() {
-        // Third-person camera orbit
         camera.position.x = (
             Math.sin(controls.cameraAngleX) *
             Math.cos(controls.cameraAngleY) * 
