@@ -1,15 +1,11 @@
 // Settings Manager for game configuration
 function createSettingsManager() {
-    var STORAGE_KEY = 'politico-settings';
-    
-    var defaultSettings = {
-        volume: 0.7,
-        musicVolume: 0.6,
-        sfxVolume: 0.8,
-        graphicsQuality: 'high',  // 'low', 'medium', 'high'
-        gameSpeed: 1.0,            // 0.5x to 2.0x
-        retroMode: false
+    var STORAGE_KEY = GAME_SETTINGS_CONFIG.storageKey;
+    var defaultSettings = GAME_SETTINGS_CONFIG.defaults;
+    var cloneDefaultSettings = function() {
+        return Object.assign({}, defaultSettings);
     };
+    var validThemes = getGameThemeNames();
     
     var manager = {
         settings: {},
@@ -23,15 +19,24 @@ function createSettingsManager() {
             var stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 try {
-                    this.settings = JSON.parse(stored);
-                    // make sure all keys are present even if more are added
-                    this.settings = Object.assign({}, defaultSettings, this.settings);
+                    var parsed = JSON.parse(stored);
+                    this.settings = cloneDefaultSettings();
+                    if (parsed && typeof parsed === 'object') {
+                        Object.keys(defaultSettings).forEach(function(key) {
+                            if (Object.prototype.hasOwnProperty.call(parsed, key)) {
+                                this.settings[key] = parsed[key];
+                            }
+                        }, this);
+                        if (validThemes.indexOf(this.settings.theme) === -1) {
+                            this.settings.theme = defaultSettings.theme;
+                        }
+                    }
                 } catch (e) {
                     console.warn('cant parse settings, defaulting :/', e);
-                    this.settings = Object.assign({}, defaultSettings);
+                    this.settings = cloneDefaultSettings();
                 }
             } else {
-                this.settings = Object.assign({}, defaultSettings);
+                this.settings = cloneDefaultSettings();
             }
         },
         
@@ -62,7 +67,7 @@ function createSettingsManager() {
         },
         
         resetToDefaults: function() {
-            this.settings = Object.assign({}, defaultSettings);
+            this.settings = cloneDefaultSettings();
             this.saveSettings();
         },
         
@@ -120,14 +125,16 @@ function createSettingsManager() {
             this.settings.gameSpeed = speed;
             this.saveSettings();
         },
-        
-        isRetroModeEnabled: function() {
-            return !!this.settings.retroMode;
+
+        getTheme: function() {
+            return this.settings.theme;
         },
 
-        setRetroMode: function(enabled) {
-            this.settings.retroMode = !!enabled;
-            this.saveSettings();
+        setTheme: function(theme) {
+            if (validThemes.indexOf(theme) !== -1) {
+                this.settings.theme = theme;
+                this.saveSettings();
+            }
         }
     };
     

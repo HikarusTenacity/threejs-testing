@@ -1,10 +1,33 @@
 const environmentVisuals = {trees: [], mountains: []};
 let treeSwayMultiplier = 1;
+let environmentTheme = {
+    groundColor: 0x4CAF50,
+    sunlightColor: 0xfff8dc,
+    skyLightColor: 0x87ceeb,
+    treeTrunkColor: 0x4d2600,
+    treeFoliageColor: 0x1a5f1a,
+    mountainColor: 0x808080,
+    snowColor: 0xffffff,
+    cloudColor: 0xffffff,
+    boardSpaceColor: 0x4CAF50,
+    boardGridColor: 0xffffff
+};
+let environmentMaterials = {
+    ground: null as THREE.MeshPhongMaterial | null,
+    floor: null as THREE.MeshPhongMaterial | null,
+    directionalLight: null as THREE.DirectionalLight | null,
+    ambientLight: null as THREE.AmbientLight | null,
+    hemisphereLight: null as THREE.HemisphereLight | null
+};
 
 function setupEnvironment(scene: THREE.Scene) {
-    const groundColor = 0x4CAF50;
-    const sunlightColor = 0xfff8dc;
-    const skyLightColor = 0x87ceeb;
+    if (typeof getGameTheme === 'function') {
+        environmentTheme = getGameTheme().visuals.environment;
+    }
+
+    const groundColor = environmentTheme.groundColor;
+    const sunlightColor = environmentTheme.sunlightColor;
+    const skyLightColor = environmentTheme.skyLightColor;
 
     const groundGeometry = new THREE.PlaneGeometry(225, 225);
     const groundMaterial = new THREE.MeshPhongMaterial({color: groundColor, flatShading: true});
@@ -55,7 +78,82 @@ function setupEnvironment(scene: THREE.Scene) {
     const hemisphereLight = new THREE.HemisphereLight(skyLightColor, groundColor, 0.5);
     scene.add(hemisphereLight);
 
+    environmentMaterials.ground = groundMaterial;
+    environmentMaterials.floor = floorMaterial;
+    environmentMaterials.directionalLight = directionalLight;
+    environmentMaterials.ambientLight = ambientLight;
+    environmentMaterials.hemisphereLight = hemisphereLight;
+
     return directionalLight;
+}
+
+function setEnvironmentTheme(theme: {
+    groundColor: number;
+    sunlightColor: number;
+    skyLightColor: number;
+    treeTrunkColor: number;
+    treeFoliageColor: number;
+    mountainColor: number;
+    snowColor: number;
+    cloudColor: number;
+    boardSpaceColor: number;
+    boardGridColor: number;
+}) {
+    environmentTheme = theme;
+
+    if (environmentMaterials.ground) {
+        environmentMaterials.ground.color.setHex(theme.groundColor);
+    }
+
+    if (environmentMaterials.floor) {
+        environmentMaterials.floor.color.setHex(theme.groundColor);
+    }
+
+    if (environmentMaterials.directionalLight) {
+        environmentMaterials.directionalLight.color.setHex(theme.sunlightColor);
+    }
+
+    if (environmentMaterials.ambientLight) {
+        environmentMaterials.ambientLight.color.setHex(theme.skyLightColor);
+    }
+
+    if (environmentMaterials.hemisphereLight) {
+        environmentMaterials.hemisphereLight.color.setHex(theme.skyLightColor);
+        environmentMaterials.hemisphereLight.groundColor.setHex(theme.groundColor);
+    }
+
+    for (const tree of environmentVisuals.trees) {
+        tree.traverse(function(node) {
+            if (!node.isMesh || !node.material || !node.material.color) return;
+            if (node.userData.themePart === 'treeTrunk') {
+                node.material.color.setHex(theme.treeTrunkColor);
+            } else if (node.userData.themePart === 'treeFoliage') {
+                node.material.color.setHex(theme.treeFoliageColor);
+            }
+        });
+    }
+
+    for (const mountain of environmentVisuals.mountains) {
+        mountain.traverse(function(node) {
+            if (!node.isMesh || !node.material || !node.material.color) return;
+            if (node.userData.themePart === 'mountain') {
+                node.material.color.setHex(theme.mountainColor);
+            } else if (node.userData.themePart === 'snow') {
+                node.material.color.setHex(theme.snowColor);
+            }
+        });
+    }
+
+    if (typeof cloudsToUpdate !== 'undefined') {
+        for (const cloud of cloudsToUpdate) {
+            cloud.traverse(function(node) {
+                if (!node.isMesh || !node.material || !node.material.color) return;
+                if (node.userData.themePart === 'cloud') {
+                    node.material.color.setHex(theme.cloudColor);
+                }
+            });
+        }
+    }
 }
 
 function setEnvironmentQuality(quality: string) {

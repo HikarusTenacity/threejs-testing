@@ -1,39 +1,65 @@
 const scene: THREE.Scene = new THREE.Scene();
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 
-type retroEffectsSettings = {
-    contrast: number;
-    saturation: number;
-    brightness: number;
-    overlayOpacity: number;
-};
-
-let retroMode: boolean = false;
-let retroOverlay: HTMLDivElement | null = null;
-let pixelScale: number = retroMode ? 2 : 1;
-const retroEffects: retroEffectsSettings = {
-    contrast: 1.12,
-    saturation: 0.86,
-    brightness: 1.14,
-    overlayOpacity: 0.44
-};
+const pixelationScale = GAME_RENDER_CONFIG.pixelationScale;
 
 const renderer = new THREE.WebGLRenderer({ 
-    antialias: false, 
-    powerPreference: 'high-performance' 
+    antialias: GAME_RENDER_CONFIG.rendererOptions.antialias, 
+    powerPreference: GAME_RENDER_CONFIG.rendererOptions.powerPreference 
 });
+
+const pixelatedRenderTarget = new THREE.WebGLRenderTarget(1, 1);
+pixelatedRenderTarget.texture.minFilter = THREE.NearestFilter;
+pixelatedRenderTarget.texture.magFilter = THREE.NearestFilter;
+pixelatedRenderTarget.texture.generateMipmaps = false;
+
+const postProcessScene = new THREE.Scene();
+const postProcessCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const postProcessMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        tDiffuse: { value: null },
+        resolution: {
+            value: new THREE.Vector4(1, 1, 1, 1)
+        }
+    },
+    vertexShader:
+        `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+        `,
+    fragmentShader:
+        `
+        uniform sampler2D tDiffuse;
+        uniform vec4 resolution;
+        varying vec2 vUv;
+        void main() {
+            vec2 iuv = (floor(resolution.xy * vUv) + .5) * resolution.zw;
+            gl_FragColor = texture2D(tDiffuse, iuv);
+        }
+        `
+});
+const postProcessQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postProcessMaterial);
+postProcessScene.add(postProcessQuad);
 
 function syncViewportSize() {
     const viewportWidth = Math.max(1, window.innerWidth);
     const viewportHeight = Math.max(1, window.innerHeight);
+    const renderWidth = Math.max(1, Math.floor(viewportWidth / pixelationScale));
+    const renderHeight = Math.max(1, Math.floor(viewportHeight / pixelationScale));
 
     camera.aspect = viewportWidth / viewportHeight;
     camera.updateProjectionMatrix();
 
-    renderer.setSize(
-        viewportWidth / pixelScale, 
-        viewportHeight / pixelScale, 
-        false
+    renderer.setSize(viewportWidth, viewportHeight, false);
+    pixelatedRenderTarget.setSize(renderWidth, renderHeight);
+    postProcessMaterial.uniforms.resolution.value.set(
+        renderWidth,
+        renderHeight,
+        1 / renderWidth,
+        1 / renderHeight
     );
 }
 
@@ -46,59 +72,6 @@ renderer.domElement.style.top = '0';
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
-
-function syncRetroUiMode() {
-    (window as any).__RETRO_MODE__ = !!retroMode;
-    document.body.classList.toggle('retro-ui', !!retroMode);
-    renderer.domElement.classList.toggle('retro-canvas', !!retroMode);
-}
-
-syncRetroUiMode();
-
-function setRetroModeEnabled(enabled: boolean) {
-    retroMode = !!enabled;
-    pixelScale = retroMode ? 2 : 1;
-
-    syncRetroUiMode();
-
-    if (retroMode) {
-        createRetroOverlay();
-    } else {
-        if (retroOverlay && retroOverlay.parentNode) {
-            retroOverlay.parentNode.removeChild(retroOverlay);
-        }
-        retroOverlay = null;
-        renderer.domElement.style.filter = '';
-    }
-
-    syncViewportSize();
-}
-
-function createRetroOverlay() {
-    if (!retroMode) {
-        return;
-    }
-
-    retroOverlay = document.createElement('div');
-    retroOverlay.className = 'retro-screen-overlay';
-    document.body.appendChild(retroOverlay);
-}
-
-function updateRetroScreenEffects() {
-    if (!retroMode) return;
-
-    renderer.domElement.style.transform = 'translate(0px, 0px)';
-    renderer.domElement.style.filter =
-        'contrast(' + retroEffects.contrast.toFixed(2) + ') ' +
-        'saturate(' + retroEffects.saturation.toFixed(2) + ') ' +
-        'brightness(' + retroEffects.brightness.toFixed(2) + ')';
-
-    if (retroOverlay) {
-        retroOverlay.style.opacity = retroEffects.overlayOpacity.toFixed(3);
-    }
-}
-
-createRetroOverlay();
 
 const infoDiv = document.getElementById('info');
 const fpsCounter = createFpsCounter();
@@ -138,6 +111,7 @@ const gameUI = createGameUI(infoDiv);
 
 // Initialize settings systems
 const settingsManager = createSettingsManager();
+applyGameTheme(settingsManager.getTheme());
 const settingsMenu = createSettingsMenu(settingsManager);
 const creditsScreen = createCreditsScreen();
 
@@ -174,15 +148,16 @@ function applyGraphicsQuality(quality) {
 
 function applySettings(settings) {
     applyMasterVolume(settings.volume);
-    setRetroModeEnabled(settings.retroMode);
     applyGraphicsQuality(settings.graphicsQuality);
     gameManager.setGameSpeed(settings.gameSpeed);
+    applyGameTheme(settings.theme);
 }
 
 settingsManager.subscribe(applySettings);
 applySettings(settingsManager.getAll());
 
 window.addEventListener('resize', function() {
+    syncViewportSize();
     applyGraphicsQuality(settingsManager.getSetting('graphicsQuality'));
 });
 
@@ -194,12 +169,12 @@ settingsMenu.onGraphicsChange(function(quality: string) {
     settingsManager.setGraphicsQuality(quality);
 });
 
-settingsMenu.onGameSpeedChange(function(speed: number) {
-    settingsManager.setGameSpeed(speed);
+settingsMenu.onThemeChange(function(theme: GameThemeName) {
+    settingsManager.setTheme(theme);
 });
 
-settingsMenu.onRetroModeToggle(function(enabled: boolean) {
-    settingsManager.setRetroMode(enabled);
+settingsMenu.onGameSpeedChange(function(speed: number) {
+    settingsManager.setGameSpeed(speed);
 });
 
 settingsMenu.onReset(function() {
@@ -240,12 +215,23 @@ var render = function () {
     requestAnimationFrame(render);
 
     if (!hasGameStarted) {
-        camera.position.set(0, 0.7, 5.2);
-        camera.lookAt(0, 0.8, 0);
+        camera.position.set(
+            GAME_CAMERA_CONFIG.pregamePosition.x,
+            GAME_CAMERA_CONFIG.pregamePosition.y,
+            GAME_CAMERA_CONFIG.pregamePosition.z
+        );
+        camera.lookAt(
+            GAME_CAMERA_CONFIG.pregameLookAt.x,
+            GAME_CAMERA_CONFIG.pregameLookAt.y,
+            GAME_CAMERA_CONFIG.pregameLookAt.z
+        );
         applyIdleAnimations(worldPieces, Date.now());
         updateEnvironmentAnimations(Date.now());
-        updateRetroScreenEffects();
+        renderer.setRenderTarget(pixelatedRenderTarget);
         renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        postProcessMaterial.uniforms.tDiffuse.value = pixelatedRenderTarget.texture;
+        renderer.render(postProcessScene, postProcessCamera);
         fpsCounter.update({ renderer: renderer, gameManager: gameManager });
         return;
     }
@@ -258,8 +244,16 @@ var render = function () {
 
     // Only update camera controls if no animation is playing
     if (gameManager.isPregame()) {
-        camera.position.set(0, 0, 5);
-        camera.lookAt(0, 0.8, 0);
+        camera.position.set(
+            GAME_CAMERA_CONFIG.boardPosition.x,
+            GAME_CAMERA_CONFIG.boardPosition.y,
+            GAME_CAMERA_CONFIG.boardPosition.z
+        );
+        camera.lookAt(
+            GAME_CAMERA_CONFIG.boardLookAt.x,
+            GAME_CAMERA_CONFIG.boardLookAt.y,
+            GAME_CAMERA_CONFIG.boardLookAt.z
+        );
     } else if (!gameManager.diceAnimator.isAnimating) {
         cameraControls.updateCamera();
     }
@@ -282,8 +276,11 @@ var render = function () {
     // Update game UI
     gameUI.update(gameManager);
 
-    updateRetroScreenEffects();
+    renderer.setRenderTarget(pixelatedRenderTarget);
     renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    postProcessMaterial.uniforms.tDiffuse.value = pixelatedRenderTarget.texture;
+    renderer.render(postProcessScene, postProcessCamera);
     fpsCounter.update({ 
         renderer: renderer, 
         gameManager: gameManager 

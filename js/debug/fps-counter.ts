@@ -1,7 +1,7 @@
 function createFpsCounter() {
-    let el = document.createElement('div');
-    el.textContent = 'FPS: --';
-    el.style.cssText = `
+    let fpsCounter = document.createElement('div');
+    fpsCounter.textContent = 'FPS: --';
+    fpsCounter.style.cssText = `
         position: fixed;
         right: 8px;
         bottom: 50%;
@@ -17,24 +17,25 @@ function createFpsCounter() {
         white-space: pre;
         text-align: right;
         color: #e8e8e8;
-        text-shadow: 1px 1px 0 #000;
+        text-shadow: 1px 1px 0 var(--theme-fps-shadow, #000);
     `;
-    document.body.appendChild(el);
+    document.body.appendChild(fpsCounter);
 
     const sampler = createFpsSampler(1000);
 
     return {
         update: function(debugInfo: any) {
-            el.style.color = '#e8e8e8';
+            fpsCounter.style.color = 'var(--theme-fps-text, #e8e8e8)';
 
             const now = performance.now();
             const sample = sampler.tick(now);
             if (!sample) return;
 
             if (typeof formatDebugStatsColored === 'function') {
-                el.innerHTML = formatDebugStatsColored(sample, debugInfo);
+                fpsCounter.innerHTML = formatDebugStatsColored(sample, debugInfo);
             } else {
-                el.textContent = 'FPS: ' + sample.fps + '\nFT: ' + sample.frameMs.toFixed(1) + 'ms';
+                fpsCounter.textContent = 'FPS: ' + sample.fps + '\n' +
+                                         'FT: ' + sample.frameMs.toFixed(1) + 'ms';
             }
         }
     };

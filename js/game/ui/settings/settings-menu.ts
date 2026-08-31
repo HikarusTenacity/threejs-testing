@@ -6,7 +6,7 @@ function createSettingsMenu(settingsManager) {
         graphicsButtons?: HTMLButtonElement[];
         speedSlider?: HTMLInputElement;
         speedValue?: HTMLSpanElement;
-        retroModeToggle?: any;
+        themeButtons?: HTMLButtonElement[];
     };
     var root = document.createElement('div');
     root.className = 'settings-overlay';
@@ -61,6 +61,27 @@ function createSettingsMenu(settingsManager) {
     });
     content.appendChild(graphicsSection);
 
+    // Theme Preset
+    var themeSection = createSettingSection('Theme Preset', 'theme-preset') as SettingSection;
+    var currentTheme = settingsManager.getTheme();
+    var themeOptions = [
+        { label: 'Default', value: 'default' },
+        { label: 'Colorblind', value: 'colorblind' },
+        { label: 'Monochrome', value: 'monochrome' }
+    ];
+    themeSection.themeButtons = [];
+
+    themeOptions.forEach(function(option) {
+        var btn = createOptionButton(option.label, option.value === currentTheme);
+        btn.value = option.value;
+        if (option.value === currentTheme) {
+            btn.classList.add('selected');
+        }
+        themeSection.themeButtons.push(btn);
+        themeSection.appendChild(btn);
+    });
+    content.appendChild(themeSection);
+
     // Game Speed Control
     var gameSpeedSection = createSettingSection('Game Speed', 'game-speed') as SettingSection;
     gameSpeedSection.speedSlider = createGameSpeedSlider('game-speed', settingsManager.getGameSpeed());
@@ -68,12 +89,6 @@ function createSettingsMenu(settingsManager) {
     gameSpeedSection.appendChild(gameSpeedSection.speedSlider);
     gameSpeedSection.appendChild(gameSpeedSection.speedValue);
     content.appendChild(gameSpeedSection);
-
-    // Retro Mode Toggle
-    var retroModeSection = createSettingSection('Retro Mode', 'retro-mode') as SettingSection;
-    retroModeSection.retroModeToggle = createToggleButton('Retro Mode', settingsManager.isRetroModeEnabled());
-    retroModeSection.appendChild(retroModeSection.retroModeToggle);
-    content.appendChild(retroModeSection);
 
     settingsPanel.appendChild(content);
 
@@ -157,8 +172,12 @@ function createSettingsMenu(settingsManager) {
                             btn.classList.add('selected');
                         }
                     });
-                    
-                    retroModeSection.retroModeToggle.updateToggle(settingsManager.isRetroModeEnabled());
+                    themeSection.themeButtons.forEach(function(btn) {
+                        btn.classList.remove('selected');
+                        if (btn.value === settingsManager.getTheme()) {
+                            btn.classList.add('selected');
+                        }
+                    });
                 }
             });
         },
@@ -189,6 +208,21 @@ function createSettingsMenu(settingsManager) {
             });
         },
 
+        onThemeChange: function(callback) {
+            if (typeof callback !== 'function') {
+                return;
+            }
+            themeSection.themeButtons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    themeSection.themeButtons.forEach(function(b) {
+                        b.classList.remove('selected');
+                    });
+                    btn.classList.add('selected');
+                    callback(btn.value);
+                });
+            });
+        },
+
         onGameSpeedChange: function(callback) {
             if (typeof callback !== 'function') {
                 return;
@@ -199,15 +233,6 @@ function createSettingsMenu(settingsManager) {
                 callback(value);
             });
         },
-
-        onRetroModeToggle: function(callback) {
-            if (typeof callback !== 'function') {
-                return;
-            }
-            retroModeSection.retroModeToggle.addEventListener('change', function(e: any) {
-                callback(e.target.checked);
-            });
-        }
     };
 }
 
@@ -294,40 +319,4 @@ function createOptionButton(label, isSelected) {
         btn.classList.add('selected');
     }
     return btn;
-}
-
-// Helper function to create toggle button
-function createToggleButton(label: string, initialState: boolean) {
-    var container = document.createElement('div');
-    container.className = 'toggle-container';
-
-    var toggle = document.createElement('input');
-    toggle.type = 'checkbox';
-    toggle.id = 'toggle-' + label.toLowerCase().replace(/\s+/g, '-');
-    toggle.className = 'settings-toggle';
-    toggle.checked = initialState;
-
-    var label_el = document.createElement('label');
-    label_el.htmlFor = toggle.id;
-    label_el.className = 'toggle-label';
-    label_el.textContent = label;
-
-    container.appendChild(toggle);
-    container.appendChild(label_el);
-
-    // Add method to update toggle state
-    (container as any).updateToggle = function(state: boolean) {
-        toggle.checked = state;
-    };
-
-    // Make container act as event target for change events
-    (container as any).addEventListener = function(event: string, handler: EventListener) {
-        if (event === 'change') {
-            toggle.addEventListener(event, handler);
-            return;
-        }
-        HTMLElement.prototype.addEventListener.call(this, event, handler);
-    };
-
-    return container;
 }

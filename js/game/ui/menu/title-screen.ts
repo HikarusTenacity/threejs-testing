@@ -28,8 +28,8 @@ function createTitleScreen() {
     settingsButton.textContent = 'Settings';
     settingsButton.classList.add('title-pop-in');
     settingsButton.style.animationDelay = '140ms';
-    settingsButton.style.background = 'linear-gradient(180deg, #8b95e8 0%, #5b6fc9 100%)';
-    settingsButton.style.borderColor = '#3d4799';
+    settingsButton.style.background = 'var(--theme-title-settings-bg)';
+    settingsButton.style.borderColor = 'var(--theme-title-settings-border)';
     buttonContainer.appendChild(settingsButton);
 
     var creditsButton = document.createElement('button');
@@ -38,8 +38,8 @@ function createTitleScreen() {
     creditsButton.textContent = 'Credits';
     creditsButton.classList.add('title-pop-in');
     creditsButton.style.animationDelay = '240ms';
-    creditsButton.style.background = 'linear-gradient(180deg, #7ac18f 0%, #46895f 100%)';
-    creditsButton.style.borderColor = '#2f6043';
+    creditsButton.style.background = 'var(--theme-title-credits-bg)';
+    creditsButton.style.borderColor = 'var(--theme-title-credits-border)';
     buttonContainer.appendChild(creditsButton);
 
     root.appendChild(buttonContainer);

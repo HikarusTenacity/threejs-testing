@@ -22,6 +22,9 @@ function createSettingsContext(initialStorage: Store = {}) {
     const localStorage = createLocalStorageMock(initialStorage);
     const context = createGameScriptContext({ localStorage });
 
+    loadGameScript(context, 'js/game/types/theme.ts');
+    loadGameScript(context, 'js/game/themes/game-theme.ts');
+    loadGameScript(context, 'js/game/config/settings.ts');
     loadGameScript(context, 'js/game/ui/settings/settings-manager.ts');
 
     return { context, localStorage };
@@ -35,7 +38,7 @@ describe('settings manager', () => {
         expect(manager.getSetting('volume')).toBe(0.7);
         expect(manager.getSetting('graphicsQuality')).toBe('high');
         expect(manager.getSetting('gameSpeed')).toBe(1.0);
-        expect(manager.getSetting('retroMode')).toBe(false);
+        expect(manager.getSetting('theme')).toBe('default');
     });
 
     it('falls back to defaults when stored JSON is invalid', () => {
@@ -70,6 +73,19 @@ describe('settings manager', () => {
         expect(manager.getGraphicsQuality()).toBe('medium');
     });
 
+    it('drops legacy settings keys when loading stored JSON', () => {
+        const { context } = createSettingsContext({
+            'politico-settings': JSON.stringify({
+                volume: 0.4,
+                retroMode: true
+            })
+        });
+        const manager = context.createSettingsManager();
+
+        expect(manager.getSetting('volume')).toBe(0.4);
+        expect(manager.getSetting('theme')).toBe('default');
+    });
+
     it('clamps game speed to allowed range', () => {
         const { context } = createSettingsContext();
         const manager = context.createSettingsManager();
@@ -91,11 +107,11 @@ describe('settings manager', () => {
         };
 
         manager.subscribe(callback);
-        manager.setSetting('retroMode', true);
+        manager.setSetting('volume', 0.8);
         expect(callCount).toBe(1);
 
         manager.unsubscribe(callback);
-        manager.setSetting('retroMode', false);
+        manager.setSetting('volume', 0.6);
         expect(callCount).toBe(1);
     });
 
@@ -103,10 +119,10 @@ describe('settings manager', () => {
         const { context, localStorage } = createSettingsContext();
         const manager = context.createSettingsManager();
 
-        manager.setSetting('retroMode', true);
+        manager.setSetting('gameSpeed', 1.2);
 
         const saved = localStorage._dump()['politico-settings'];
         expect(saved).toBeTruthy();
-        expect(saved).toContain('"retroMode":true');
+        expect(saved).toContain('"gameSpeed":1.2');
     });
 });

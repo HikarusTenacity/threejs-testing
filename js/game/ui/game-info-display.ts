@@ -1,6 +1,3 @@
-// Game info display - main turn and player status information
-declare var PLAYERS: any[];
-
 var gameInfoDisplay: any = {
     infoDiv: null,
     lastUpdate: 0,

@@ -1,19 +1,19 @@
 function createCreditsScreen() {
-    var root = document.createElement('div');
+    const root = document.createElement('div');
     root.className = 'credits-overlay hidden';
 
-    var panel = document.createElement('div');
+    const panel = document.createElement('div');
     panel.className = 'credits-panel';
 
-    var titleBar = document.createElement('div');
+    const titleBar = document.createElement('div');
     titleBar.className = 'credits-title-bar';
 
-    var title = document.createElement('h2');
+    const title = document.createElement('h2');
     title.className = 'credits-title';
     title.textContent = 'Credits';
     titleBar.appendChild(title);
 
-    var closeButton = document.createElement('button');
+    const closeButton = document.createElement('button');
     closeButton.className = 'credits-close-btn';
     closeButton.type = 'button';
     closeButton.textContent = 'Close';
@@ -21,13 +21,13 @@ function createCreditsScreen() {
 
     panel.appendChild(titleBar);
 
-    var viewport = document.createElement('div');
+    const viewport = document.createElement('div');
     viewport.className = 'credits-scroll-viewport';
 
-    var track = document.createElement('div');
+    const track = document.createElement('div');
     track.className = 'credits-scroll-track';
 
-    var creditsLines = [
+    const creditsLines = [
         'POLITICO!',
         '',
         'Created by',
@@ -40,6 +40,8 @@ function createCreditsScreen() {
         'Simar and Sophia',
         '3D Models, UI',
         'Hayden',
+        'Music/SFX',
+        'Hayden',
         'Special Thanks',
         'Dr. Royaltey',
         '',
@@ -47,8 +49,8 @@ function createCreditsScreen() {
         'Thanks for playing!'
     ];
 
-    for (var i = 0; i < creditsLines.length; i++) {
-        var line = document.createElement('div');
+    for (let i = 0; i < creditsLines.length; i++) {
+        const line = document.createElement('div');
         line.className = i % 2 === 0 ? 'credits-line credits-line-strong' : 'credits-line';
         line.textContent = creditsLines[i] || '\u00A0';
         track.appendChild(line);
@@ -59,7 +61,7 @@ function createCreditsScreen() {
     root.appendChild(panel);
     document.body.appendChild(root);
 
-    var screen = {
+    const screen = {
         root: root,
         viewport: viewport,
         track: track,

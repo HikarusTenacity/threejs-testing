@@ -1,68 +1,79 @@
-// Cloud model with movement
-function createCloud(x: number, y: number, z: number, scale: number) {
-    var cloud = new THREE.Group();
-    var cloudColor = 0xffffff;
-    var cloudMaterial = new THREE.MeshPhongMaterial({
-        color: cloudColor, 
-        flatShading: true,
-        transparent: true,
-        opacity: 0.7
+/**
+ * Creates a cloud composed of multiple spheres
+ * @param x
+ * @param y
+ * @param z
+ * @param scale
+ */
+function createCloud(x: number, y: number, z: number, scale: number): THREE.Group {
+    const cloud = new THREE.Group();
+    const cloudMaterial = new THREE.MeshPhongMaterial({
+        color: CLOUD_COLOR,
+        flatShading: CLOUD_USES_FLATSHADING,
+        transparent: CLOUD_IS_TRANSPARENT,
+        opacity: CLOUD_OPACITY,
     });
+    cloud.userData.themePart = 'cloud';
 
-    // Main cloud body - multiple spheres for puffy cloud shape
-    for (var i = 0; i < 8; i++) {
-        var sphere = new THREE.Mesh(new THREE.SphereGeometry((10 + Math.random() * 10) * scale, 8, 4), cloudMaterial);
-        sphere.scale.y = 0.8;
-        sphere.position.set((Math.random() - 0.5) * 25 * scale, (Math.random() - 0.5) * 10 * scale, (Math.random() - 0.5) * 25 * scale);
+    for (let i = 0; i < CLOUD_SPHERE_COUNT; i++) {
+        const randomOffset = Math.random() * CLOUD_SPHERE_RADIUS_RANGE;
+        const randomRadius: number = (CLOUD_SPHERE_RADIUS_BASE + randomOffset) * scale;
+        const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(
+                randomRadius,
+                CLOUD_GEOMETRY_DETAIL.widthSegments,
+                CLOUD_GEOMETRY_DETAIL.heightSegments
+            ),
+            cloudMaterial);
+
+        sphere.scale.y = CLOUD_SPHERE_Y_FLATTEN;
+        sphere.position.set(
+            (Math.random() - 0.5) * CLOUD_SPREAD_XZ * scale,
+            (Math.random() - 0.5) * CLOUD_SPREAD_Y * scale,
+            (Math.random() - 0.5) * CLOUD_SPREAD_XZ * scale
+        );
         cloud.add(sphere);
     }
 
     cloud.position.set(x, y, z);
-    
-    // Add movement properties
+
     cloud.userData.velocity = {
-        x: (Math.random() - 0.5) * 0.01,
-        z: (Math.random() - 0.5) * 0.01
+        x: (Math.random() - 0.5) * CLOUD_BASE_SPEED,
+        z: (Math.random() - 0.5) * CLOUD_BASE_SPEED
     };
-    cloud.userData.movementBounds = {
-        xMin: -125,
-        xMax: 125,
-        zMin: -125,
-        zMax: 125
-    };
+    cloud.userData.movementBounds = CLOUD_BOUNDS;
     
     return cloud;
 }
 
-function generateCloud() {
-    var cloud = createCloud(
-        Math.random() * 250 - 125, // x between -125 and 125
-        Math.random() * 30 + 30, // y between 30 and 60
-        Math.random() * 250 - 125, // z between -125 and 125
-        Math.random() * 0.1 + 0.5 // scale variation
+/**
+ * Creates a random cloud within range
+ */
+function generateCloud(): THREE.Group {
+    const halfWidth = (CLOUD_BOUNDS.xMax - CLOUD_BOUNDS.xMin) / 2;
+    const randomScale = Math.random() * CLOUD_SCALE_RANGE + CLOUD_SCALE_MIN;
+
+    return createCloud(
+        Math.random() * (halfWidth * 2) - halfWidth,
+        Math.random() * CLOUD_HEIGHT_RANGE + CLOUD_HEIGHT_MIN,
+        Math.random() * (halfWidth * 2) - halfWidth,
+        randomScale
     );
-    return cloud;
 }
 
-function updateCloudPosition(cloud: any) {
+/**
+ * Updates cloud pos based on velo/pos bounds
+ * @param cloud
+ */
+function updateCloudPosition(cloud: THREE.Group) {
     if (cloud.userData.velocity) {
-        var speedMult = typeof cloudSpeedMultiplier === 'number' ? cloudSpeedMultiplier : 1;
+        const speedMult = typeof cloudSpeedMultiplier === 'number' ? cloudSpeedMultiplier : 1;
         cloud.position.x += cloud.userData.velocity.x * speedMult;
         cloud.position.z += cloud.userData.velocity.z * speedMult;
-        
-        var bounds = cloud.userData.movementBounds;
-        
-        // Wrap around when clouds go out of bounds
-        if (cloud.position.x < bounds.xMin) {
-            cloud.position.x = bounds.xMax;
-        } else if (cloud.position.x > bounds.xMax) {
-            cloud.position.x = bounds.xMin;
-        }
 
-        if (cloud.position.z < bounds.zMin) {
-            cloud.position.z = bounds.zMax;
-        } else if (cloud.position.z > bounds.zMax) {
-            cloud.position.z = bounds.zMin;
-        }
+        const bounds = cloud.userData.movementBounds;
+
+        cloud.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, cloud.position.x));
+        cloud.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, cloud.position.z));
     }
 }

@@ -35,168 +35,10 @@ font-display: swap;
 --content-font: 'Avenir Next', 'Avenir', 'Segoe UI', sans-serif;
 --game-font: var(--ui-font);
 --font: var(--ui-font);
-/* Lofi text tuning: edit these values only */
---lofi-text-downscale-static: 1;
---lofi-text-upscale-static: 1;
---lofi-text-blur-static: 0px;
---lofi-text-blur-controls: 0px;
-}
-
-body.retro-ui #info,
-body.retro-ui #turnDisplay,
-body.retro-ui .player-corner,
-body.retro-ui .name-overlay,
-body.retro-ui .title-screen-overlay,
-body.retro-ui .title-rules-modal,
-body.retro-ui .credits-overlay,
-body.retro-ui .credits-panel,
-body.retro-ui .settings-overlay,
-body.retro-ui .settings-panel {
-font-smooth: never;
--webkit-font-smoothing: none;
--moz-osx-font-smoothing: grayscale;
-text-rendering: optimizeSpeed;
-}
-
-/* Downscale then upscale static text blocks to mimic low-resolution rasterized text. */
-body.retro-ui .name-title,
-body.retro-ui .name-message,
-body.retro-ui .name-controls,
-body.retro-ui .title-screen-logo,
-body.retro-ui .title-screen-subtitle,
-body.retro-ui .title-screen-controls,
-body.retro-ui .title-rules-title,
-body.retro-ui .title-rules-text,
-body.retro-ui .credits-title,
-body.retro-ui .credits-line,
-body.retro-ui .credits-line-strong,
-body.retro-ui .settings-title,
-body.retro-ui .settings-label,
-body.retro-ui .settings-value-label,
-body.retro-ui .toggle-label {
-zoom: var(--lofi-text-downscale-static);
-transform: scale(var(--lofi-text-upscale-static));
-transform-origin: center;
-filter: blur(var(--lofi-text-blur-static));
-}
-
-/* Keep transform-heavy controls functional while softening text fidelity. */
-body.retro-ui .name-slot,
-body.retro-ui .name-key,
-body.retro-ui .name-key-delete,
-body.retro-ui .title-screen-start,
-body.retro-ui .title-rules-close,
-body.retro-ui .credits-close-btn,
-body.retro-ui .settings-option-btn,
-body.retro-ui .settings-button,
-body.retro-ui #info,
-body.retro-ui #turnDisplay,
-body.retro-ui .player-corner {
-filter: blur(var(--lofi-text-blur-controls));
-}
-
-/* Keep key action controls readable in retro mode. */
-body.retro-ui .name-confirm,
-body.retro-ui .title-screen-start,
-body.retro-ui .title-rules-close,
-body.retro-ui .credits-close-btn,
-body.retro-ui .settings-button,
-body.retro-ui .settings-option-btn {
-filter: none;
 }
 
 html, body { width: 100%; height: 100%; margin: 0; padding: 0; }
-canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
-.retro-canvas {
-image-rendering: pixelated;
-transform-origin: center;
-}
-
-.retro-screen-overlay {
-position: fixed;
-inset: 0;
-pointer-events: none;
-z-index: 110;
-mix-blend-mode: multiply;
-overflow: hidden;
-background:
-repeating-linear-gradient(
-to bottom,
-rgba(0, 0, 0, 0.21) 0px,
-rgba(0, 0, 0, 0.21) 2px,
-rgba(255, 255, 255, 0.02) 3px,
-rgba(255, 255, 255, 0.02) 4px
-),
-radial-gradient(circle at center, transparent 48%, rgba(0, 0, 0, 0.58) 100%);
-opacity: 0.58;
-}
-
-.retro-screen-overlay::before,
-.retro-screen-overlay::after {
-content: '';
-position: absolute;
-left: 0;
-right: 0;
-pointer-events: none;
-}
-
-/* Slow rolling scan-wave texture like CRT interference bands. */
-.retro-screen-overlay::before {
-top: -35%;
-bottom: -35%;
-opacity: 0.24;
-background: repeating-linear-gradient(
-to bottom,
-rgba(255, 255, 255, 0.08) 0px,
-rgba(255, 255, 255, 0.08) 2px,
-rgba(0, 0, 0, 0) 8px,
-rgba(0, 0, 0, 0) 18px,
-rgba(0, 0, 0, 0.09) 22px,
-rgba(0, 0, 0, 0.09) 24px
-);
-filter: blur(0.7px);
-mix-blend-mode: screen;
-animation: crtWaveRoll 10.5s linear infinite;
-}
-
-/* Horizontal brightness wave sweeping down the screen. */
-.retro-screen-overlay::after {
-top: -120%;
-height: 140%;
-opacity: 0.2;
-background: linear-gradient(
-to bottom,
-transparent 0%,
-rgba(255, 255, 255, 0.14) 46%,
-rgba(255, 255, 255, 0.04) 56%,
-transparent 72%
-);
-animation: crtBandSweep 8.6s ease-in-out infinite;
-}
-
-@keyframes crtWaveRoll {
-0% {
-transform: translateY(-18%) skewX(0deg);
-}
-50% {
-transform: translateY(8%) skewX(0.55deg);
-}
-100% {
-transform: translateY(36%) skewX(-0.4deg);
-}
-}
-
-@keyframes crtBandSweep {
-0% {
-transform: translateY(-95%);
-}
-50% {
-transform: translateY(25%);
-}
-100% {
-transform: translateY(130%);
-}
-}
+canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; filter: var(--game-canvas-filter, none); }
 #info {
 position: absolute;
 top: 50%;
@@ -1188,12 +1030,98 @@ font-size: 14px;
 }
 }
 
+body[data-game-theme] #info {
+background: var(--theme-info-bg);
+color: var(--theme-info-text);
+border-color: var(--theme-info-border);
+}
+
+body[data-game-theme] #turnDisplay {
+color: var(--theme-panel-text);
+text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.75);
+}
+
+body[data-game-theme] .title-screen-overlay {
+background: var(--theme-title-screen-bg);
+color: var(--theme-title-screen-text);
+}
+
+body[data-game-theme] .title-screen-logo {
+text-shadow: var(--theme-title-logo-shadow);
+}
+
+body[data-game-theme] .title-rules-modal,
+body[data-game-theme] .credits-panel,
+body[data-game-theme] .settings-panel,
+body[data-game-theme] .player-corner,
+body[data-game-theme] .name-overlay {
+background: var(--theme-panel-bg);
+border-color: var(--theme-panel-border);
+color: var(--theme-panel-text);
+box-shadow: var(--theme-panel-shadow);
+}
+
+body[data-game-theme] .title-rules-title,
+body[data-game-theme] .title-rules-text,
+body[data-game-theme] .credits-title,
+body[data-game-theme] .credits-line,
+body[data-game-theme] .settings-title,
+body[data-game-theme] .settings-label,
+body[data-game-theme] .settings-value-label,
+body[data-game-theme] .toggle-label,
+body[data-game-theme] .player-corner-name {
+color: var(--theme-panel-text);
+}
+
+body[data-game-theme] .title-screen-start,
+body[data-game-theme] .title-rules-close,
+body[data-game-theme] .credits-close-btn,
+body[data-game-theme] .settings-button,
+body[data-game-theme] .settings-option-btn {
+color: var(--theme-button-text);
+border-color: var(--theme-button-border);
+box-shadow: var(--theme-button-shadow);
+}
+
+body[data-game-theme] .title-screen-start {
+background: var(--theme-title-start-bg);
+border-color: var(--theme-title-start-border);
+}
+
+body[data-game-theme] .title-screen-start + .title-screen-start {
+background: var(--theme-title-settings-bg);
+border-color: var(--theme-title-settings-border);
+}
+
+body[data-game-theme] .title-screen-start + .title-screen-start + .title-screen-start {
+background: var(--theme-title-credits-bg);
+border-color: var(--theme-title-credits-border);
+}
+
+body[data-game-theme] .settings-button.settings-reset-btn {
+background: linear-gradient(180deg, #dc3545, #b82835);
+border-color: #7a1f2b;
+}
+
+body[data-game-theme] .settings-button.settings-apply-btn {
+background: linear-gradient(180deg, #28a745, #1f7e34);
+border-color: #165023;
+}
+
+body[data-game-theme] .settings-option-btn.selected {
+background: var(--theme-button-selected-bg);
+border-color: var(--theme-button-selected-border);
+color: var(--theme-button-selected-text);
+}
 
 </style>
 </head>
 <body translate="no" class="notranslate">
 <div id="info"></div>
 <div id="turnDisplay"></div>
+<script>
+window.PLAYERS = window.PLAYERS || [];
+</script>
 <!-- Libraries -->
 <script src="/three.min.js"></script>
 <!-- Bundled game runtime built from TypeScript -->

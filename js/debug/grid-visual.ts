@@ -1,3 +1,6 @@
+let playableSpaceMaterial: THREE.MeshBasicMaterial | null = null;
+let boardLineMaterial: THREE.LineBasicMaterial | null = null;
+
 function createPlayableSpacesVisualization(scene: any) {
     const spacesGroup = new THREE.Group();
     
@@ -9,6 +12,7 @@ function createPlayableSpacesVisualization(scene: any) {
         transparent: true,
         side: THREE.DoubleSide
     });
+    playableSpaceMaterial = spaceMaterial;
     
     // create plane for space based on bounds
     for (let spaceId = 0; spaceId < 40; spaceId++) {
@@ -43,38 +47,47 @@ function createBoardGridVisualization(scene: any) {
         opacity: 0.3,
         transparent: true
     });
-    
-    // create grid coordinates
-    function generateCoordinates(start: number, step1: number, step2: number) {
-        const coords = [start];
-        for (let i = 0; i < 11; i++) {
-            start += (i === 0 || i === 10) ? step1 : step2;
-            coords.push(start);
-        }
-        return coords;
-    }
+    boardLineMaterial = lineMaterial;
     
     const xCoords = generateCoordinates(-10, CORNER, PROPERTY);
     const zCoords = generateCoordinates(10, -CORNER, -PROPERTY);
     
     // vertical
-    for (let i = 0; i < xCoords.length; i++) {
-        const geometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(xCoords[i], boardY, -10),
-            new THREE.Vector3(xCoords[i], boardY, 10)
+    for (const element of xCoords) {
+        const geometry: THREE.BufferGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(element, boardY, -10),
+            new THREE.Vector3(element, boardY, 10)
         ]);
         gridGroup.add(new THREE.Line(geometry, lineMaterial));
     }
     
     // horizontal
-    for (let i = 0; i < zCoords.length; i++) {
-        const geometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(-10, boardY, zCoords[i]),
-            new THREE.Vector3(10, boardY, zCoords[i])
+    for (const element of zCoords) {
+        const geometry: THREE.BufferGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(-10, boardY, element),
+            new THREE.Vector3(10, boardY, element)
         ]);
         gridGroup.add(new THREE.Line(geometry, lineMaterial));
     }
     
     scene.add(gridGroup);
     return gridGroup;
+}
+
+function generateCoordinates(start: number, step1: number, step2: number) {
+    const coords = [start];
+    for (let i = 0; i < 10; i++) {
+        start += (i === 0 || i === 9) ? step1 : step2;
+        coords.push(start);
+    }
+    return coords;
+}
+
+function setBoardTheme(spaceColor: number, gridColor: number): void {
+    if (playableSpaceMaterial) {
+        playableSpaceMaterial.color.setHex(spaceColor);
+    }
+    if (boardLineMaterial) {
+        boardLineMaterial.color.setHex(gridColor);
+    }
 }

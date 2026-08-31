@@ -1,7 +1,15 @@
 // Camera controls and management
 function setupCameraControls(camera: THREE.PerspectiveCamera, scene: THREE.Scene) {
-    camera.position.set(0, 8, 15);
-    camera.lookAt(0, 0, 0);
+    camera.position.set(
+        GAME_CAMERA_CONFIG.defaultPosition.x,
+        GAME_CAMERA_CONFIG.defaultPosition.y,
+        GAME_CAMERA_CONFIG.defaultPosition.z
+    );
+    camera.lookAt(
+        GAME_CAMERA_CONFIG.defaultLookAt.x,
+        GAME_CAMERA_CONFIG.defaultLookAt.y,
+        GAME_CAMERA_CONFIG.defaultLookAt.z
+    );
 
     type CameraControls = {
         isDragging: boolean;
@@ -17,9 +25,9 @@ function setupCameraControls(camera: THREE.PerspectiveCamera, scene: THREE.Scene
         isDragging: false,
         previousMouseX: 0,
         previousMouseY: 0,
-        cameraAngleX: 0,
-        cameraAngleY: 0.5,
-        cameraDistance: 17,
+        cameraAngleX: GAME_CAMERA_CONFIG.controls.angleX,
+        cameraAngleY: GAME_CAMERA_CONFIG.controls.angleY,
+        cameraDistance: GAME_CAMERA_CONFIG.controls.distance,
         updateCamera: function() {}
     };
 
@@ -39,14 +47,14 @@ function setupCameraControls(camera: THREE.PerspectiveCamera, scene: THREE.Scene
             const deltaX = event.clientX - controls.previousMouseX;
             const deltaY = event.clientY - controls.previousMouseY;
 
-            controls.cameraAngleX -= deltaX * 0.005;
-            controls.cameraAngleY -= deltaY * 0.005;
+            controls.cameraAngleX -= deltaX * GAME_CAMERA_CONFIG.controls.rotateSpeed;
+            controls.cameraAngleY -= deltaY * GAME_CAMERA_CONFIG.controls.rotateSpeed;
 
             // Limit vertical rotation
             controls.cameraAngleY = Math.max(
-                0.01, 
+                GAME_CAMERA_CONFIG.controls.minPolarAngle, 
                 Math.min(
-                    Math.PI / 2 - 0.01, 
+                    GAME_CAMERA_CONFIG.controls.maxPolarAngle, 
                     controls.cameraAngleY
                 )
             );
@@ -58,8 +66,8 @@ function setupCameraControls(camera: THREE.PerspectiveCamera, scene: THREE.Scene
 
     // Zoom with mouse wheel
     document.addEventListener('wheel', function(event) {
-        controls.cameraDistance += event.deltaY * 0.01;
-        controls.cameraDistance = Math.max(1, controls.cameraDistance); //clamp
+        controls.cameraDistance += event.deltaY * GAME_CAMERA_CONFIG.controls.zoomSpeed;
+        controls.cameraDistance = Math.max(GAME_CAMERA_CONFIG.controls.minDistance, controls.cameraDistance);
     });
 
     controls.updateCamera = function() {
@@ -77,7 +85,11 @@ function setupCameraControls(camera: THREE.PerspectiveCamera, scene: THREE.Scene
             Math.cos(controls.cameraAngleY) * 
             controls.cameraDistance
         );
-        camera.lookAt(0, 0, 0);
+        camera.lookAt(
+            GAME_CAMERA_CONFIG.defaultLookAt.x,
+            GAME_CAMERA_CONFIG.defaultLookAt.y,
+            GAME_CAMERA_CONFIG.defaultLookAt.z
+        );
     };
 
     return controls;

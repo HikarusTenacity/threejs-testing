@@ -24,10 +24,46 @@ Green - Mental Health Liason Group (ribbon)
 Blue - Sierra Club (recycling)
 Yellow - American Energy Alliance (lightning)
 
-todo:
+
+TODO:
+check refactoring for EVERYTHING
+tests
+- [ ] all tests
+debug
+- [ ] all debug
+actors:
+- [ ] pieces
+- [ ] players
+- [ ] manager
+animations (oh boy)
+- [ ] dice rolling
+- [ ] player animator
+board stuff
+- [ ] board data, layout, queries 
+config 
+- [ ] camera
+- [ ] rendering
+- [ ] settings
+models
+- [X] environment
+- [ ] dice
+- [ ] pieces
+themes
+- [ ] themes
+types
+- [ ] types
+ui
+- [ ] credits
+- [ ] title screen
+- [ ] settings
+- [ ] game info
+- [ ] game manager
+rendering
+- [ ] envioronment
+- [ ] sky
 
 - have each character have special dice
-    -> NRA has (0,1,1,5,5,6) dice
-    -> MHLG has (3,3,3,3,3,3) dice
-    -> SC has (1,1,3,3,5,5) dice
-    -> AEA has (0,0,0,6,6,6) dice
+  -> NRA has (0,1,1,5,5,6) dice
+  -> MHLG has (3,3,3,3,3,3) dice
+  -> SC has (1,1,3,3,5,5) dice
+  -> AEA has (0,0,0,6,6,6) dice

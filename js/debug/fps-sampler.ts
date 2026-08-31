@@ -1,5 +1,5 @@
-function createFpsSampler(sampleWindowMs: number) {
-    const windowMs = typeof sampleWindowMs === 'number' ? sampleWindowMs : 1000;
+function createFpsSampler(sampleWindowMs: number = 1000) {
+    const windowMs = sampleWindowMs;
     let lastFrameTime = performance.now();
     let lastSample = lastFrameTime;
     let frameCount = 0, fps = 0, frameMs = 0, maxFrameMs = 0;

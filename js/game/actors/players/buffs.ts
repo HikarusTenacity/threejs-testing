@@ -1,5 +1,5 @@
 function addPlayerBuff(playerId: number, buffName: string) {
-    var player = getPlayerById(playerId);
+    const player  = getPlayerById(playerId);
     if (!player || !buffName) return false;
 
     if (player.buffs.length >= MAX_PLAYER_BUFF_SLOTS) {
@@ -11,7 +11,7 @@ function addPlayerBuff(playerId: number, buffName: string) {
 }
 
 function clearPlayerBuffs(playerId: number) {
-    var player = getPlayerById(playerId);
+    const player = getPlayerById(playerId);
     if (!player) return;
 
     player.buffs = [];

@@ -2,16 +2,23 @@ let cloudsToUpdate: THREE.Mesh[] = [];
 let cloudEffectsEnabled = true;
 let skyQuality = 'high';
 let skyScene: THREE.Scene = null;
-const skyColor = 0x87ceeb;
-const fogColor = 0x5a7a9e;
+let skyColor = 0x87ceeb;
+let fogColor = 0x5a7a9e;
 let sunMesh: THREE.Mesh = null;
 let haloMesh: THREE.Mesh = null;
 let cloudSpeedMultiplier = 1;
-
-type SkyQuality = 'low' | 'medium' | 'high';
+let skyThemeColors = {
+    skyColor: skyColor,
+    fogColor: fogColor,
+    sunColor: 0xffff00
+};
 
 function setupSky(scene: THREE.Scene, directionalLight: THREE.DirectionalLight) {
-    const sunColor = 0xffff00;
+    if (typeof getGameTheme === 'function') {
+        skyThemeColors = getGameTheme().visuals.sky;
+    }
+
+    const sunColor = skyThemeColors.sunColor;
     skyScene = scene;
 
     const sunGeometry = new THREE.SphereGeometry(3, 16, 16);
@@ -72,8 +79,8 @@ function applySkyQuality() {
 
     if (skyScene) {
         if (showBackground) {
-            skyScene.background = new THREE.Color(skyColor);
-            skyScene.fog = new THREE.Fog(fogColor, 5, 100);
+            skyScene.background = new THREE.Color(skyThemeColors.skyColor);
+            skyScene.fog = new THREE.Fog(skyThemeColors.fogColor, 5, 100);
         } else {
             skyScene.background = null;
             skyScene.fog = null;
@@ -82,5 +89,22 @@ function applySkyQuality() {
 
     for (const cloud of cloudsToUpdate) {
         cloud.visible = cloudsVisible;
+    }
+}
+
+function setSkyTheme(themeColors: { skyColor: number; fogColor: number; sunColor: number; }) {
+    skyThemeColors = themeColors;
+
+    if (skyScene) {
+        skyScene.background = new THREE.Color(themeColors.skyColor);
+        skyScene.fog = new THREE.Fog(themeColors.fogColor, 5, 100);
+    }
+
+    if (sunMesh) {
+        (sunMesh.material as THREE.MeshBasicMaterial).color.setHex(themeColors.sunColor);
+    }
+
+    if (haloMesh) {
+        (haloMesh.material as THREE.MeshBasicMaterial).color.setHex(themeColors.sunColor);
     }
 }

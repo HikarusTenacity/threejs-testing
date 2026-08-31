@@ -1,3 +1,8 @@
+/**
+ * Sets the currency of a player, ensuring it stays within bounds.
+ * @param playerId The ID of the player.
+ * @param amount The amount to set.
+ */
 function setPlayerCurrency(playerId: number, amount: number) {
     const player = getPlayerById(playerId);
     if (!player) return;
@@ -5,6 +10,11 @@ function setPlayerCurrency(playerId: number, amount: number) {
     player.currency = clampValue(amount, 0, MAX_PLAYER_CURRENCY);
 }
 
+/**
+ * Adds or subtracts currency from a player, ensuring it stays within bounds.
+ * @param playerId The ID of the player.
+ * @param amountDelta The amount to add (positive) or subtract (negative).
+ */
 function addPlayerCurrency(playerId: number, amountDelta: number) {
     const player = getPlayerById(playerId);
     if (!player) return;

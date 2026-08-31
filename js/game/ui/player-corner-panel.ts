@@ -136,6 +136,12 @@ var playerCornerPanels = {
         return model;
     },
 
+    setFallbackGuyColors: function(colors: string[]) {
+        if (Array.isArray(colors) && colors.length) {
+            this.fallbackGuyColors = colors.slice();
+        }
+    },
+
     updatePortraitViewport: function(player, index, isCurrentTurn) {
         var viewport = this.portraitViewports[index];
         if (!viewport) {
@@ -209,3 +215,7 @@ var playerCornerPanels = {
         }
     }
 };
+
+function setPlayerFallbackColors(colors: string[]) {
+    playerCornerPanels.setFallbackGuyColors(colors);
+}

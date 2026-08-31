@@ -1,5 +1,6 @@
 // Game state and player management
-PLAYERS = [];
+const globalPlayers = ((globalThis as any).PLAYERS || ((globalThis as any).PLAYERS = [] as any[])) as any[];
+let PLAYERS: any[] = globalPlayers;
 let PLAYER_PIECES = {};  // Maps player ID to piece object
 const MAX_PLAYER_CURRENCY = 99999999;
 const MAX_PLAYER_BUFF_SLOTS = 99;
@@ -12,7 +13,7 @@ function initializePlayers() {
     PLAYER_PIECES = {};
 
     for (let i = 0; i < 4; i++) {
-        let player = {
+        const player = {
             id: i,
             name: "Player " + (i + 1),
             color: PLAYER_COLORS[i],
@@ -20,7 +21,7 @@ function initializePlayers() {
             currentSpace: 0,
             currency: 0,
             buffs: [],
-            piece: null  // Will be set after pieces are created
+            piece: null
         };
         PLAYERS.push(player);
     }

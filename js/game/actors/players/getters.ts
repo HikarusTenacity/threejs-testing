@@ -1,10 +1,15 @@
+/**
+ * Gets the pieces at a specific space.
+ * @param spaceId The ID of the space.
+ * @returns An array of pieces at the space.
+ */
 function getPiecesAtSpace(spaceId: number) {
     let pieces = [];
-    for (let i = 0; i < PLAYERS.length; i++) {
-        if (PLAYERS[i].currentSpace === spaceId && PLAYERS[i].piece) {
+    for (const element of PLAYERS) {
+        if (element.currentSpace === spaceId && element.piece) {
             pieces.push({
-                playerId: PLAYERS[i].id,
-                piece: PLAYERS[i].piece,
+                playerId: element.id,
+                piece: element.piece,
                 index: pieces.length
             });
         }
@@ -12,8 +17,12 @@ function getPiecesAtSpace(spaceId: number) {
     return pieces;
 }
 
+/**
+ * Gets a player by their ID.
+ * @param playerId The ID of the space.
+ * @returns The player with the specified ID, or null if not found.
+ */
 function getPlayerById(playerId: number) {
-    //validate and return
     if (playerId >= 0 && playerId < PLAYERS.length) {
         return PLAYERS[playerId];
     }

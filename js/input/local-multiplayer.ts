@@ -1,22 +1,9 @@
 function createLocalMultiplayerInput() {
     const bcolors = {
-        green:  { bg: 'linear-gradient(180deg, #4CAF50 0%, #45a049 100%)', border: '#2d6b2f', shadow: '#1e4620' },
-        blue:   { bg: 'linear-gradient(180deg, #2196F3 0%, #1976D2 100%)', border: '#0d47a1', shadow: '#0a3270' },
-        orange: { bg: 'linear-gradient(180deg, #FF9800 0%, #F57C00 100%)', border: '#E65100', shadow: '#bf360c' },
-        red:    { bg: 'linear-gradient(180deg, #f44336 0%, #d32f2f 100%)', border: '#b71c1c', shadow: '#7f0000' }
-    };
-
-    type buttonColor = 'green' | 'blue' | 'orange' | 'red';
-    type LocalMultiplayerInput = {
-        onActionForPlayer: ((player: string, action: string) => void) | null;
-        onRawKeyInput: ((key: string) => void) | null;
-        actionButton: HTMLButtonElement | null;
-
-        init(): void;
-        update(): void;
-        createActionButton(): void;
-        setButtonText(text?: string): void;
-        setButtonColor(color?: buttonColor): void;
+        green:  { bg: 'var(--theme-action-green-bg)', border: 'var(--theme-action-green-border)', shadow: 'var(--theme-action-green-shadow)' },
+        blue:   { bg: 'var(--theme-action-blue-bg)', border: 'var(--theme-action-blue-border)', shadow: 'var(--theme-action-blue-shadow)' },
+        orange: { bg: 'var(--theme-action-orange-bg)', border: 'var(--theme-action-orange-border)', shadow: 'var(--theme-action-orange-shadow)' },
+        red:    { bg: 'var(--theme-action-red-bg)', border: 'var(--theme-action-red-border)', shadow: 'var(--theme-action-red-shadow)' }
     };
 
     const input: LocalMultiplayerInput = {
@@ -96,7 +83,7 @@ function createLocalMultiplayerInput() {
             }
         },
         
-        setButtonColor: function(color: buttonColor = "green") {
+        setButtonColor: function(color: ButtonColor = 'green') {
             if (this.actionButton) {
                 const c = bcolors[color] ?? bcolors.green;
                 this.actionButton.style.background = c.bg;
