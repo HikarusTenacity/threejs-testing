@@ -1,4 +1,4 @@
-function createFpsSampler(sampleWindowMs: number = 1000) {
+export function createFpsSampler(sampleWindowMs: number = 1000) {
     const windowMs = sampleWindowMs;
     let lastFrameTime = performance.now();
     let lastSample = lastFrameTime;

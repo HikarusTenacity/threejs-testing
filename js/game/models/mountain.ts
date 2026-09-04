@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import * as RenderParams from '../constants/rendering-parameters';
+
 /**
  * Creates a mountain with snow at (x, z) with width/height.
  * @param x
@@ -7,36 +10,37 @@
  */
 function createMountain(x: number, z: number, width: number, height: number) {
     const mountain = new THREE.Group();
-    
+    const mountainConfig = RenderParams.MOUNTAIN;
+
     // Create a pyramid-like mountain
-    const geometry = new THREE.ConeGeometry(width, height, MOUNTAIN_GEOMETRY_DETAIL);
+    const geometry = new THREE.ConeGeometry(width, height, mountainConfig.geometryDetail);
     const material = new THREE.MeshPhongMaterial({
-        color: MOUNTAIN_COLOR,
-        flatShading: MOUNTAIN_USES_FLATSHADING,
-        transparent: MOUNTAIN_IS_TRANSPARENT,
-        opacity: MOUNTAIN_OPACITY
+        color: mountainConfig.color,
+        flatShading: mountainConfig.usesFlatShading,
+        transparent: mountainConfig.isTransparent,
+        opacity: mountainConfig.opacity
     });
 
     const cone = new THREE.Mesh(geometry, material);
     cone.userData.themePart = 'mountain';
     cone.position.y = height / 2 - 1;
     cone.rotation.y = Math.PI / 4; //rot 45 deg
-    cone.castShadow = MOUNTAIN_CASTS_SHADOW;
+    cone.castShadow = mountainConfig.castsShadow;
     mountain.add(cone);
     
-    // Snow cap
-    const snowGeometry = new THREE.ConeGeometry(width * SNOW_SCALE, height * SNOW_SCALE, SNOW_GEOMETRY_DETAIL);
+    const snowConfig = RenderParams.MOUNTAIN.snow;
+    const snowGeometry = new THREE.ConeGeometry(width * snowConfig.scale, height * snowConfig.scale, snowConfig.geometryDetail);
     const snowMaterial = new THREE.MeshPhongMaterial({
-        color: SNOW_COLOR,
-        flatShading: SNOW_USES_FLATSHADING,
-        transparent: SNOW_IS_TRANSPARENT,
-        opacity: SNOW_OPACITY
+        color: snowConfig.color,
+        flatShading: snowConfig.usesFlatShading,
+        transparent: snowConfig.isTransparent,
+        opacity: snowConfig.opacity
     });
     const snowCap = new THREE.Mesh(snowGeometry, snowMaterial);
     snowCap.userData.themePart = 'snow';
-    snowCap.position.y = height * SNOW_MIN_HEIGHT - 1;
+    snowCap.position.y = height * snowConfig.minHeight - 1;
     snowCap.rotation.y = Math.PI / 4; //rot 45 deg
-    snowCap.castShadow = SNOW_CASTS_SHADOW;
+    snowCap.castShadow = snowConfig.castsShadow;
     mountain.add(snowCap);
     
     mountain.position.set(x, 0, z);
@@ -45,10 +49,10 @@ function createMountain(x: number, z: number, width: number, height: number) {
 
 /**
  * Creates a ring of mountains around the center
- * @param scene
  */
-function createMountains(scene: THREE.Scene): THREE.Group[] {
+function createMountains(): THREE.Group[] {
     let mountains: THREE.Group[] = [];
+    const mountainConfig = RenderParams.MOUNTAIN;
 
     /**
      * Spawns a mountain at (x, z)
@@ -67,22 +71,22 @@ function createMountains(scene: THREE.Scene): THREE.Group[] {
      * @param z
      */
     const createRandomMountain = (x: number, z: number): THREE.Group => {
-        const width = MOUNTAIN_WIDTH_BASE + (Math.random() * MOUNTAIN_WIDTH_RANGE);
-        const height = MOUNTAIN_HEIGHT_BASE + (Math.random() * MOUNTAIN_HEIGHT_RANGE);
+        const width = mountainConfig.ring.widthBase + (Math.random() * mountainConfig.ring.widthRange);
+        const height = mountainConfig.ring.heightBase + (Math.random() * mountainConfig.ring.heightRange);
         return createMountain(x, z, width, height);
     };
 
     for (let i = 0; i < 5; i++) {
-        spawnMountain((i-1) * MOUNTAIN_HALF_DISTANCE, -MOUNTAIN_DISTANCE);
+        spawnMountain((i-1) * mountainConfig.ring.halfDistance, -mountainConfig.ring.distance);
     }
     for (let i = 0; i < 5; i++) {
-        spawnMountain((i-1) * MOUNTAIN_HALF_DISTANCE, MOUNTAIN_DISTANCE);
+        spawnMountain((i-1) * mountainConfig.ring.halfDistance, mountainConfig.ring.distance);
     }
     for (let i = 0; i < 5; i++) {
-        spawnMountain(MOUNTAIN_DISTANCE, (i-1) * MOUNTAIN_HALF_DISTANCE);
+        spawnMountain(mountainConfig.ring.distance, (i-1) * mountainConfig.ring.halfDistance);
     }
     for (let i = 0; i < 5; i++) {
-        spawnMountain(-MOUNTAIN_DISTANCE, (i-1) * MOUNTAIN_HALF_DISTANCE);
+        spawnMountain(-mountainConfig.ring.distance, (i-1) * mountainConfig.ring.halfDistance);
     }
 
     return mountains;

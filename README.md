@@ -46,7 +46,7 @@ config
 - [ ] settings
 models
 - [X] environment
-- [ ] dice
+- [X] dice
 - [ ] pieces
 themes
 - [ ] themes

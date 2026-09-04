@@ -1,69 +1,107 @@
-function makeDot(diceGroup, x, y, z, radius) {
-    var dotGeometry = new THREE.SphereGeometry(radius, 8, 8);
-    var dotMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
-    var dot = new THREE.Mesh(dotGeometry, dotMaterial);
-    dot.position.set(x, y, z);
-    dot.castShadow = true;
-    diceGroup.add(dot);
+import * as THREE from 'three';
+import * as RenderParams from '../constants/rendering-parameters';
+
+/**
+ * Creates a pip for dice at (x,y,z)
+ * @param diceGroup
+ * @param x
+ * @param y
+ * @param z
+ */
+function createPip(diceGroup: THREE.Group, x: number, y: number, z: number): void {
+    const pipGeometry = new THREE.SphereGeometry(RenderParams.DICE.PIPS.radius, RenderParams.DICE.PIPS.segments, RenderParams.DICE.PIPS.segments);
+    const pipMaterial = new THREE.MeshPhongMaterial({
+        color: RenderParams.DICE.PIPS.color,
+        flatShading: RenderParams.DICE.PIPS.usesFlatShading
+    });
+    const pip = new THREE.Mesh(pipGeometry, pipMaterial);
+    pip.position.set(x, y, z);
+    pip.castShadow = RenderParams.DICE.PIPS.castsShadow;
+    diceGroup.add(pip);
 }
 
-function createDice() {
-    //make dice as a group of a cube and dots
-    var dice = new THREE.Group();
-    
-    //make cube (doubled from 0.16 to 0.32)
-    var geometry = new THREE.BoxGeometry(0.32, 0.32, 0.32);
-    var materials = [
-        new THREE.MeshPhongMaterial({ color: 0xffffff }),  // right (1)
-        new THREE.MeshPhongMaterial({ color: 0xffffff }),  // left (6)
-        new THREE.MeshPhongMaterial({ color: 0xffffff }),  // top (5)
-        new THREE.MeshPhongMaterial({ color: 0xffffff }),  // bottom (2)
-        new THREE.MeshPhongMaterial({ color: 0xffffff }),  // front (3)
-        new THREE.MeshPhongMaterial({ color: 0xffffff })   // back (4)
-    ];
-    var cube = new THREE.Mesh(geometry, materials);
-    cube.castShadow = true;
-    cube.receiveShadow = true;
-    dice.add(cube);
-    
-    //create dots to represent the numbers (doubled from 1/5 size)
-    var dotRadius = 0.032;
-    var faceOffset = 0.1388;
+/**
+ * Creates a die model with pips
+ * I'm hardcoding the faces for now, maybe more dynamic later
+ * FIXME - allow for dynamic faces (because there are special types of die)
+ * @returns A THREE.Group containing the dice model
+ */
+export function createDice(): THREE.Group {
+    const dice = new THREE.Group();
+    const diceConfig = RenderParams.DICE;
 
-    //chatgpt'd this shit i dont have the braincells for ts
-    
-    // Face 1 (right, +X): 1 dot
-    makeDot(dice, faceOffset, 0, 0, dotRadius);
-    
-    // Face 2 (bottom, -Y): 2 dots
-    makeDot(dice, -0.06, -faceOffset, 0.06, dotRadius);
-    makeDot(dice, 0.06, -faceOffset, -0.06, dotRadius);
-    
-    // Face 3 (front, +Z): 3 dots
-    makeDot(dice, -0.06, 0.06, faceOffset, dotRadius);
-    makeDot(dice, 0, 0, faceOffset, dotRadius);
-    makeDot(dice, 0.06, -0.06, faceOffset, dotRadius);
-    
-    // Face 4 (back, -Z): 4 dots
-    makeDot(dice, -0.06, 0.06, -faceOffset, dotRadius);
-    makeDot(dice, 0.06, 0.06, -faceOffset, dotRadius);
-    makeDot(dice, -0.06, -0.06, -faceOffset, dotRadius);
-    makeDot(dice, 0.06, -0.06, -faceOffset, dotRadius);
-    
-    // Face 5 (top, +Y): 5 dots
-    makeDot(dice, -0.06, faceOffset, 0.06, dotRadius);
-    makeDot(dice, 0.06, faceOffset, 0.06, dotRadius);
-    makeDot(dice, -0.06, faceOffset, -0.06, dotRadius);
-    makeDot(dice, 0.06, faceOffset, -0.06, dotRadius);
-    makeDot(dice, 0, faceOffset, 0, dotRadius);
-    
-    // Face 6 (left, -X): 6 dots
-    makeDot(dice, -faceOffset, -0.06, 0.06, dotRadius);
-    makeDot(dice, -faceOffset, 0.06, 0.06, dotRadius);
-    makeDot(dice, -faceOffset, -0.06, -0.06, dotRadius);
-    makeDot(dice, -faceOffset, 0.06, -0.06, dotRadius);
-    makeDot(dice, -faceOffset, -0.06, 0, dotRadius);
-    makeDot(dice, -faceOffset, 0.06, 0, dotRadius);
-    
+    const geometry = new THREE.BoxGeometry(diceConfig.radius, diceConfig.radius, diceConfig.radius);
+    const materials: THREE.Material[] = new Array(6).fill(
+        new THREE.MeshPhongMaterial({
+            color: diceConfig.color,
+            flatShading: diceConfig.usesFlatShading
+        })
+    );
+    const cube = new THREE.Mesh(geometry, materials);
+    cube.castShadow = diceConfig.castsShadow;
+    cube.receiveShadow = diceConfig.recievesShadow;
+    dice.add(cube);
+
+    /**
+     * Adds face to die at a given axis
+     * @param axis
+     * @param depth
+     * @param pips
+     */
+    const addFace = (
+        axis: 'x' | 'y' | 'z',
+        depth: number,
+        pips: [number, number][]
+    ): void => {
+        for (const [horizOffset, vertOffset] of pips) {
+            if (axis === 'x') createPip(dice, depth, horizOffset, vertOffset);
+            if (axis === 'y') createPip(dice, horizOffset, depth, vertOffset);
+            if (axis === 'z') createPip(dice, horizOffset, vertOffset, depth);
+        }
+    };
+
+    // facing right - 1
+    addFace('x', diceConfig.faceOffset, [[0, 0]]);
+
+    // facing down - 2
+    addFace('y', -diceConfig.faceOffset, [
+        [-diceConfig.pipSpacing, diceConfig.pipSpacing], // top left
+        [diceConfig.pipSpacing, -diceConfig.pipSpacing] // bottom right
+    ]);
+
+    // facing front - 3
+    addFace('z', diceConfig.faceOffset, [
+        [-diceConfig.pipSpacing, diceConfig.pipSpacing], // top left
+        [0, 0], // center
+        [diceConfig.pipSpacing, -diceConfig.pipSpacing] // bottom right
+    ]);
+
+    // facing back - 4
+    addFace('z', -RenderParams.DICE.faceOffset, [
+        [-diceConfig.pipSpacing, diceConfig.pipSpacing], // top left
+        [diceConfig.pipSpacing, diceConfig.pipSpacing], // top right
+        [-diceConfig.pipSpacing, -diceConfig.pipSpacing], // bottom left
+        [diceConfig.pipSpacing, -diceConfig.pipSpacing] // bottom right
+    ]);
+
+    // facing top - 5
+    addFace('y', diceConfig.faceOffset, [
+        [-diceConfig.pipSpacing, diceConfig.pipSpacing], // top left
+        [diceConfig.pipSpacing, diceConfig.pipSpacing], // top right
+        [-diceConfig.pipSpacing, -diceConfig.pipSpacing], // bottom left
+        [diceConfig.pipSpacing, -diceConfig.pipSpacing], // bottom right
+        [0, 0] // center
+    ]);
+
+    // facing left - 6
+    addFace('x', -RenderParams.DICE.faceOffset, [
+        [-diceConfig.pipSpacing, diceConfig.pipSpacing], // top left
+        [diceConfig.pipSpacing, diceConfig.pipSpacing], // top right
+        [-diceConfig.pipSpacing, -diceConfig.pipSpacing], // bottom left
+        [diceConfig.pipSpacing, -diceConfig.pipSpacing], // bottom right
+        [-diceConfig.pipSpacing, 0], // center left
+        [diceConfig.pipSpacing, 0] // center right
+    ]);
+
     return dice;
 }

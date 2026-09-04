@@ -5,7 +5,11 @@
  * @returns An object containing the grid coordinates and space ID.
  */
 
-function getGridCoordinates(worldX: number, worldZ: number): { x: string; z: string; spaceId: number } {
+export function getGridCoordinates(worldX: number, worldZ: number): {
+    x: string;
+    z: string;
+    spaceId: number
+} {
     const spaceId = getSpaceIdFromCoordinates(worldX, worldZ);
     
     return {

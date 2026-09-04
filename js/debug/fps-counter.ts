@@ -1,4 +1,4 @@
-function createFpsCounter() {
+export function createFpsCounter() {
     let fpsCounter = document.createElement('div');
     fpsCounter.textContent = 'FPS: --';
     fpsCounter.style.cssText = `

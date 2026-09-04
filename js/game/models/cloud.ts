@@ -1,3 +1,6 @@
+import * as THREE from 'three';
+import * as RenderParams from '../constants/rendering-parameters';
+
 /**
  * Creates a cloud composed of multiple spheres
  * @param x
@@ -7,30 +10,32 @@
  */
 function createCloud(x: number, y: number, z: number, scale: number): THREE.Group {
     const cloud = new THREE.Group();
+    const cloudConfig = RenderParams.CLOUD;
+
     const cloudMaterial = new THREE.MeshPhongMaterial({
-        color: CLOUD_COLOR,
-        flatShading: CLOUD_USES_FLATSHADING,
-        transparent: CLOUD_IS_TRANSPARENT,
-        opacity: CLOUD_OPACITY,
+        color: cloudConfig.color,
+        flatShading: cloudConfig.usesFlatShading,
+        transparent: cloudConfig.isTransparent,
+        opacity: cloudConfig.opacity,
     });
     cloud.userData.themePart = 'cloud';
 
-    for (let i = 0; i < CLOUD_SPHERE_COUNT; i++) {
-        const randomOffset = Math.random() * CLOUD_SPHERE_RADIUS_RANGE;
-        const randomRadius: number = (CLOUD_SPHERE_RADIUS_BASE + randomOffset) * scale;
+    for (let i = 0; i < cloudConfig.sphereCount; i++) {
+        const randomOffset = Math.random() * cloudConfig.sphereRadiusRange;
+        const randomRadius: number = (cloudConfig.sphereRadiusBase + randomOffset) * scale;
         const sphere = new THREE.Mesh(
             new THREE.SphereGeometry(
                 randomRadius,
-                CLOUD_GEOMETRY_DETAIL.widthSegments,
-                CLOUD_GEOMETRY_DETAIL.heightSegments
+                cloudConfig.geometryDetail.widthSegments,
+                cloudConfig.geometryDetail.heightSegments
             ),
             cloudMaterial);
 
-        sphere.scale.y = CLOUD_SPHERE_Y_FLATTEN;
+        sphere.scale.y = cloudConfig.sphereYFlatten;
         sphere.position.set(
-            (Math.random() - 0.5) * CLOUD_SPREAD_XZ * scale,
-            (Math.random() - 0.5) * CLOUD_SPREAD_Y * scale,
-            (Math.random() - 0.5) * CLOUD_SPREAD_XZ * scale
+            (Math.random() - 0.5) * cloudConfig.spreadXZ * scale,
+            (Math.random() - 0.5) * cloudConfig.spreadY * scale,
+            (Math.random() - 0.5) * cloudConfig.spreadXZ * scale
         );
         cloud.add(sphere);
     }
@@ -38,10 +43,10 @@ function createCloud(x: number, y: number, z: number, scale: number): THREE.Grou
     cloud.position.set(x, y, z);
 
     cloud.userData.velocity = {
-        x: (Math.random() - 0.5) * CLOUD_BASE_SPEED,
-        z: (Math.random() - 0.5) * CLOUD_BASE_SPEED
+        x: (Math.random() - 0.5) * cloudConfig.baseSpeed,
+        z: (Math.random() - 0.5) * cloudConfig.baseSpeed
     };
-    cloud.userData.movementBounds = CLOUD_BOUNDS;
+    cloud.userData.movementBounds = cloudConfig.bounds;
     
     return cloud;
 }
@@ -49,13 +54,15 @@ function createCloud(x: number, y: number, z: number, scale: number): THREE.Grou
 /**
  * Creates a random cloud within range
  */
-function generateCloud(): THREE.Group {
-    const halfWidth = (CLOUD_BOUNDS.xMax - CLOUD_BOUNDS.xMin) / 2;
-    const randomScale = Math.random() * CLOUD_SCALE_RANGE + CLOUD_SCALE_MIN;
+export function generateCloud(): THREE.Group {
+    const cloudConfig = RenderParams.CLOUD;
+
+    const halfWidth = (cloudConfig.bounds.xMax - cloudConfig.bounds.xMin) / 2;
+    const randomScale = Math.random() * cloudConfig.scaleRange + cloudConfig.minScale;
 
     return createCloud(
         Math.random() * (halfWidth * 2) - halfWidth,
-        Math.random() * CLOUD_HEIGHT_RANGE + CLOUD_HEIGHT_MIN,
+        Math.random() * cloudConfig.heightRange + cloudConfig.minHeight,
         Math.random() * (halfWidth * 2) - halfWidth,
         randomScale
     );
@@ -65,7 +72,7 @@ function generateCloud(): THREE.Group {
  * Updates cloud pos based on velo/pos bounds
  * @param cloud
  */
-function updateCloudPosition(cloud: THREE.Group) {
+export function updateCloudPosition(cloud: THREE.Group) {
     if (cloud.userData.velocity) {
         const speedMult = typeof cloudSpeedMultiplier === 'number' ? cloudSpeedMultiplier : 1;
         cloud.position.x += cloud.userData.velocity.x * speedMult;
